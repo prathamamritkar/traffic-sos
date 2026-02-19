@@ -1,0 +1,103 @@
+.timeline {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.timelineTitle {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timelineList {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 0.5rem;
+}
+
+.step {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.step:last-child {
+    padding-bottom: 0;
+}
+
+.stepLine {
+    position: absolute;
+    left: 7px;
+    top: 20px;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.step:last-child .stepLine {
+    display: none;
+}
+
+.stepIcon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 2px solid #475569;
+    z-index: 1;
+    margin-top: 4px;
+    transition: all 0.3s ease;
+}
+
+.stepActive .stepIcon {
+    background: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.stepCompleted .stepIcon {
+    background: #22c55e;
+    border-color: #22c55e;
+}
+
+.stepAlert .stepIcon {
+    background: #ef4444;
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.stepContent {
+    flex: 1;
+}
+
+.stepLabel {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.stepTime {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.stepCompleted .stepLabel {
+    color: #94a3b8;
+}
+
+.stepActive .stepLabel {
+    color: #ffffff;
+}

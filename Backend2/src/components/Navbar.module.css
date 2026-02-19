@@ -1,0 +1,110 @@
+.nav {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logoEmoji {
+    font-size: 20px;
+}
+
+.logoText {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.logoBadge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    background: var(--red-glow);
+    border: 1px solid var(--border-accent);
+    border-radius: 4px;
+    color: var(--red);
+    letter-spacing: 0.5px;
+}
+
+.divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+}
+
+.liveIndicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.liveText {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.userName {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.logoutBtn {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-sans);
+}
+
+.logoutBtn:hover {
+    border-color: var(--red);
+    color: var(--red);
+}
