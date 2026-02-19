@@ -14,7 +14,7 @@ export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
         <div className={styles.panel}>
             <div className={styles.header}>
                 <span className={styles.title}>Medical Profile</span>
-                <span className={`badge badge-red`}>{accidentId}</span>
+                <span className="badge badge-red">{accidentId}</span>
             </div>
 
             {/* Vital Stats */}
@@ -24,17 +24,30 @@ export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
                 <VitalCard label="Gender" value={mp.gender} />
             </div>
 
-            {/* Case Scene Analysis (from Bystander Vision) */}
+            {/* Intelligent Scene Analysis (from Bystander Vision AI) */}
             {caseRecord.sceneAnalysis && (
                 <Section title="🧠 Intelligent Scene Analysis">
-                    <MetricRow label="Severity" value={caseRecord.sceneAnalysis.injurySeverity} alert={caseRecord.sceneAnalysis.injurySeverity === 'CRITICAL'} />
-                    <MetricRow label="Victims" value={caseRecord.sceneAnalysis.victimCount.toString()} />
-                    <MetricRow label="Urgency" value={caseRecord.sceneAnalysis.urgencyLevel} alert={caseRecord.sceneAnalysis.urgencyLevel === 'IMMEDIATE'} />
-                    <div className={styles.tags} style={{ marginTop: '0.5rem' }}>
-                        {caseRecord.sceneAnalysis.visibleHazards.map(h => (
-                            <span key={h} className="badge badge-yellow">⚠️ {h}</span>
-                        ))}
-                    </div>
+                    <MetricRow
+                        label="Severity"
+                        value={caseRecord.sceneAnalysis.injurySeverity}
+                        alert={caseRecord.sceneAnalysis.injurySeverity === 'CRITICAL'}
+                    />
+                    <MetricRow
+                        label="Victims"
+                        value={caseRecord.sceneAnalysis.victimCount.toString()}
+                    />
+                    <MetricRow
+                        label="Urgency"
+                        value={caseRecord.sceneAnalysis.urgencyLevel}
+                        alert={caseRecord.sceneAnalysis.urgencyLevel === 'IMMEDIATE'}
+                    />
+                    {caseRecord.sceneAnalysis.visibleHazards.length > 0 && (
+                        <div className={styles.tags} style={{ marginTop: '0.5rem' }}>
+                            {caseRecord.sceneAnalysis.visibleHazards.map((h) => (
+                                <span key={h} className="badge badge-yellow">⚠️ {h}</span>
+                            ))}
+                        </div>
+                    )}
                 </Section>
             )}
 
@@ -48,12 +61,12 @@ export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
                 <MetricRow label="Rollover" value={metrics.rolloverDetected ? 'YES ⚠️' : 'No'} alert={metrics.rolloverDetected} />
             </Section>
 
-            {/* Medical Info */}
+            {/* Medical Info — only rendered when data exists */}
             {mp.allergies.length > 0 && (
                 <Section title="⚠️ Allergies">
                     <div className={styles.tags}>
                         {mp.allergies.map((a) => (
-                            <span key={a} className={`badge badge-red`}>{a}</span>
+                            <span key={a} className="badge badge-red">{a}</span>
                         ))}
                     </div>
                 </Section>
@@ -63,7 +76,7 @@ export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
                 <Section title="Medications">
                     <div className={styles.tags}>
                         {mp.medications.map((m) => (
-                            <span key={m} className={`badge badge-blue`}>{m}</span>
+                            <span key={m} className="badge badge-blue">{m}</span>
                         ))}
                     </div>
                 </Section>
@@ -73,35 +86,46 @@ export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
                 <Section title="Medical Conditions">
                     <div className={styles.tags}>
                         {mp.conditions.map((c) => (
-                            <span key={c} className={`badge badge-yellow`}>{c}</span>
+                            <span key={c} className="badge badge-yellow">{c}</span>
                         ))}
                     </div>
                 </Section>
             )}
 
-            {/* Emergency Contacts */}
-            <Section title="Emergency Contacts">
-                {mp.emergencyContacts.map((contact) => (
-                    <div key={contact} className={styles.contact}>
-                        <span>📞</span>
-                        <a href={`tel:${contact}`} className={styles.contactLink}>{contact}</a>
-                    </div>
-                ))}
-            </Section>
+            {/* Emergency Contacts — guarded: empty array means no Section rendered */}
+            {mp.emergencyContacts.length > 0 && (
+                <Section title="Emergency Contacts">
+                    {mp.emergencyContacts.map((contact) => (
+                        <div key={contact} className={styles.contact}>
+                            <span>📞</span>
+                            <a href={`tel:${contact}`} className={styles.contactLink}>
+                                {contact}
+                            </a>
+                        </div>
+                    ))}
+                </Section>
+            )}
 
             {/* Case Timeline */}
             <CaseTimeline caseRecord={caseRecord} />
 
-            {/* Case Status */}
+            {/* Case Info */}
             <Section title="Case Info">
                 <MetricRow label="Status" value={status} />
-                <MetricRow label="Created" value={new Date(createdAt).toLocaleTimeString()} />
+                <MetricRow
+                    label="Created"
+                    value={new Date(createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                    })}
+                />
                 {caseRecord.responderId && (
                     <MetricRow label="Responder" value={caseRecord.responderId} />
                 )}
             </Section>
 
-            {/* Live Media Stream */}
+            {/* Live Evidence Stream */}
             <Section title="🔴 Live Evidence Stream">
                 <BroadcastPlayer accidentId={accidentId} />
             </Section>
@@ -109,49 +133,76 @@ export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
     );
 }
 
+// ── BroadcastPlayer ──────────────────────────────────────────────
 function BroadcastPlayer({ accidentId }: { accidentId: string }) {
     const [chunk, setChunk] = useState(0);
     const [token, setToken] = useState<string | null>(null);
+    const [hasError, setHasError] = useState(false);
 
-    // Retrieve signed access token from auth state
+    // Retrieve auth token — null if not available (never uses a fake fallback)
     useEffect(() => {
-        const stored = localStorage.getItem('rescuedge_token');
-        setToken(stored || 'fallback-token');
+        try {
+            setToken(localStorage.getItem('rescuedge_token'));
+        } catch {
+            setToken(null);
+        }
     }, []);
 
-    // Simulated chunk rotation
+    // Reset error state when chunk rotates (new segment might be valid)
     useEffect(() => {
         const interval = setInterval(() => {
-            setChunk(c => (c + 1) % 5); // cycle through 5 chunks
-        }, 12000); // 12s segments
+            setChunk((c) => (c + 1) % 5);
+            setHasError(false);
+        }, 12_000);
         return () => clearInterval(interval);
     }, []);
 
-    const videoUrl = `http://localhost:3001/api/broadcast/${accidentId}/stream/${chunk}?token=${token}`;
+    // Use env var — never hardcode localhost
+    const baseUrl = process.env.NEXT_PUBLIC_DETECTION_API_URL ?? '';
+    const videoUrl = token && baseUrl
+        ? `${baseUrl}/api/broadcast/${encodeURIComponent(accidentId)}/stream/${chunk}?token=${encodeURIComponent(token)}`
+        : null;
+
+    // No auth token or service URL not configured
+    if (!videoUrl) {
+        return (
+            <div className={styles.streamOffline}>
+                <span>📡</span>
+                <p>Evidence stream unavailable — service not configured</p>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.streamContainer}>
-            <video
-                key={videoUrl}
-                autoPlay
-                muted
-                controls
-                className={styles.videoPlayer}
-                onError={(e) => {
-                    // Fallback for missing chunks
-                    (e.target as HTMLVideoElement).style.display = 'none';
-                }}
-            >
-                <source src={videoUrl} type="video/mp4" />
-                No video feed available
-            </video>
+            {hasError ? (
+                // Visible fallback card instead of invisible collapsed element
+                <div className={styles.streamOffline}>
+                    <span>📡</span>
+                    <p>Awaiting stream for chunk {chunk}…</p>
+                </div>
+            ) : (
+                <video
+                    key={videoUrl}
+                    autoPlay
+                    muted
+                    controls
+                    className={styles.videoPlayer}
+                    onError={() => setHasError(true)}
+                >
+                    <source src={videoUrl} type="video/mp4" />
+                    Your browser does not support the video element.
+                </video>
+            )}
             <div className={styles.streamOverlay}>
-                <span className={styles.pulseDot}></span>
-                LIVE CHUNK ${chunk}
+                <span className={styles.pulseDot} />
+                LIVE · CHUNK {chunk}
             </div>
         </div>
     );
 }
+
+// ── Sub-components ───────────────────────────────────────────────
 
 function VitalCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
     return (
@@ -175,7 +226,9 @@ function MetricRow({ label, value, alert }: { label: string; value: string; aler
     return (
         <div className={styles.metricRow}>
             <span className={styles.metricLabel}>{label}</span>
-            <span className={`${styles.metricValue} ${alert ? styles.metricAlert : ''}`}>{value}</span>
+            <span className={`${styles.metricValue} ${alert ? styles.metricAlert : ''}`}>
+                {value}
+            </span>
         </div>
     );
 }

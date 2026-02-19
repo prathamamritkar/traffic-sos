@@ -242,12 +242,16 @@ export default function LiveMap({ cases, ambulanceLocations, signals, selectedCa
                 const color = isGreen ? '#22c55e' : signal.state === 'RED' ? '#ef4444' : '#eab308';
                 const isCorridor = signal.corridor;
 
+                // Use a CSS class for the pulse animation instead of injecting a <style>
+                // tag into every divIcon — which would create O(n) <style> nodes in the DOM.
+                // The `leaflet-corridor-pulse` class is defined globally in LiveMap.module.css.
+                const pulseClass = isCorridor && isGreen ? 'leaflet-corridor-pulse' : '';
+                const size = isCorridor ? 32 : 24;
                 const icon = L.divIcon({
                     className: '',
-                    html: `
-                        <div style="
-                            width: ${isCorridor ? 32 : 24}px;
-                            height: ${isCorridor ? 32 : 24}px;
+                    html: `<div class="${pulseClass}" style="
+                            width: ${size}px;
+                            height: ${size}px;
                             background: ${color};
                             border: 2px solid white;
                             border-radius: 50%;
@@ -255,20 +259,9 @@ export default function LiveMap({ cases, ambulanceLocations, signals, selectedCa
                             align-items: center;
                             justify-content: center;
                             box-shadow: 0 0 ${isCorridor ? 15 : 8}px ${color};
-                            ${isCorridor && isGreen ? 'animation: pulse-corridor 1.5s infinite;' : ''}
-                        ">
-                            ${isCorridor ? '🚑' : ''}
-                        </div>
-                        <style>
-                            @keyframes pulse-corridor {
-                                0% { transform: scale(1); box-shadow: 0 0 10px #22c55e; }
-                                50% { transform: scale(1.2); box-shadow: 0 0 20px #22c55e; }
-                                100% { transform: scale(1); box-shadow: 0 0 10px #22c55e; }
-                            }
-                        </style>
-                    `,
-                    iconSize: [isCorridor ? 32 : 24, isCorridor ? 32 : 24],
-                    iconAnchor: [isCorridor ? 16 : 12, isCorridor ? 16 : 12],
+                        ">${isCorridor ? '🚑' : ''}</div>`,
+                    iconSize: [size, size],
+                    iconAnchor: [size / 2, size / 2],
                 });
 
                 const existing = signalRef.current.get(signal.signalId);

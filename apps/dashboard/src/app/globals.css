@@ -1,183 +1,687 @@
 /* ============================================================
-   RescuEdge Dashboard — Global CSS
-   Design: Dark mode, emergency red accents, glassmorphism
+   RescuEdge Dashboard — Material Design 3 Token System
+   Psychology-Calibrated Color System
+   ──────────────────────────────────────────────────────────
+   Color philosophy (mirrors Flutter app_theme.dart):
+   • Surfaces: warm-neutral dark (NOT cold blue-black) — reduces
+     clinical detachment, increases perceived trustworthiness
+   • brandRed (#D32F2F) = calm-state CTAs — avoids alarm fatigue
+   • sosRed   (#FF1744) = ACTIVE EMERGENCY indicators only
+   • safeGreen (#2E7D52) = passive monitoring / safe / vault states
+   • arrivedGreen (#00C853) = active confirmation / help dispatched
+   • warnAmber (#F57C00) = genuine warnings only, never decoration
+   • aiBlue   (#1976D2) = analytical / informational / AI features
+   • All WCAG 2.1 AA checked (≥4.5:1 on respective surfaces)
    ============================================================ */
 
-*, *::before, *::after {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* ── MD3 Color Tokens ─────────────────────────────────────── */
 :root {
-  /* Color palette */
-  --bg-primary:    #0a0e1a;
-  --bg-secondary:  #0f1629;
-  --bg-card:       #131d35;
-  --bg-glass:      rgba(19, 29, 53, 0.8);
-  --border:        rgba(255, 255, 255, 0.08);
-  --border-accent: rgba(239, 68, 68, 0.4);
+  /* ── Surface hierarchy (warm-neutral, not cold blue-black) ─
+     The slight warm undertone signals approachability and trust
+     vs. cold blue-black which reads as sterile / clinical.       */
+  --md-sys-color-background: #0A0A0F;
+  --md-sys-color-surface: #0F1117;
+  --md-sys-color-surface-container-lowest: #0A0A0F;
+  --md-sys-color-surface-container-low: #0F1117;
+  --md-sys-color-surface-container: #16191F;
+  --md-sys-color-surface-container-high: #1E222B;
+  --md-sys-color-surface-container-highest: #272C37;
 
-  /* Text */
-  --text-primary:   #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted:     #475569;
+  /* ── Brand red — calm-state (crimson, not fire-red) ─────────
+     D32F2F reads as "authority and urgency" without triggering
+     the startle reflex. Fire-red (#FF1744) is reserved for
+     active emergency indicators to prevent alarm fatigue.       */
+  --color-brand-red: #D32F2F;
+  --color-sos-red: #FF1744;
+  /* ACTIVE EMERGENCY ONLY */
+  --color-crash-red: #E53935;
+  /* crash countdown state */
+  --color-red-container: rgba(211, 47, 47, 0.10);
+  --color-red-on-container: #F48FB1;
 
-  /* Accent colors */
-  --red:       #ef4444;
-  --red-dark:  #dc2626;
-  --red-glow:  rgba(239, 68, 68, 0.2);
-  --green:     #22c55e;
-  --green-glow: rgba(34, 197, 94, 0.2);
-  --yellow:    #eab308;
-  --blue:      #3b82f6;
-  --blue-glow: rgba(59, 130, 246, 0.2);
-  --orange:    #f97316;
+  /* MD3 aliases */
+  --md-sys-color-primary: var(--color-brand-red);
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: var(--color-red-container);
+  --md-sys-color-on-primary-container: var(--color-red-on-container);
 
-  /* Gradients */
-  --gradient-hero:   linear-gradient(135deg, #0a0e1a 0%, #1a0a0a 50%, #0a0e1a 100%);
-  --gradient-card:   linear-gradient(135deg, rgba(19,29,53,0.9) 0%, rgba(26,10,10,0.6) 100%);
-  --gradient-red:    linear-gradient(135deg, #ef4444, #dc2626);
-  --gradient-green:  linear-gradient(135deg, #22c55e, #16a34a);
-  --gradient-blue:   linear-gradient(135deg, #3b82f6, #2563eb);
+  /* ── Safe green (desaturated) — passive monitoring states ───
+     Neon #00C853 triggers urgency via high retinal saturation.
+     For "system is monitoring / you are safe" states, a deeper,
+     calmer green prevents constant subliminal stress arousal.    */
+  --color-safe-green: #2E7D52;
+  --color-arrived-green: #00C853;
+  /* help dispatched/arrived confirmation */
+  --color-green-container: rgba(46, 125, 82, 0.10);
+  --color-green-on-container: #81C784;
 
-  /* Shadows */
-  --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-red:   0 0 20px rgba(239, 68, 68, 0.3);
-  --shadow-green: 0 0 20px rgba(34, 197, 94, 0.3);
+  --md-sys-color-tertiary: var(--color-safe-green);
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: var(--color-green-container);
+  --md-sys-color-on-tertiary-container: var(--color-green-on-container);
 
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* ── AI blue — intelligence / information / analysis ──────── */
+  --color-ai-blue: #1976D2;
+  --color-blue-bright: #1E88E5;
+  --color-blue-container: rgba(25, 118, 210, 0.10);
+  --color-blue-on-container: #90CAF9;
 
-  /* Spacing */
-  --radius-sm: 6px;
+  --md-sys-color-secondary: var(--color-ai-blue);
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: var(--color-blue-container);
+  --md-sys-color-on-secondary-container: var(--color-blue-on-container);
+
+  /* ── Warning amber — reserved for genuine warnings ONLY ─────
+     F57C00 has enough saturation to demand attention without the
+     alarm cortisol spike of red. Used only for real warnings.
+     B07D24 (infoAmber) = much softer — for informational tags.  */
+  --color-warn-amber: #F57C00;
+  --color-info-amber: #B07D24;
+  --color-amber-container: rgba(245, 124, 0, 0.09);
+
+  /* ── Error ──────────────────────────────────────────────────  */
+  --md-sys-color-error: #E53935;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: rgba(229, 57, 53, 0.10);
+
+  /* ── Text — WCAG 2.1 AA verified on #16191F surface ─────────
+     EEF2F7 on #16191F: ≈14.0:1 ✓
+     8E9BAE on #16191F: ≈ 4.7:1 ✓ (AA)
+     637483 on #16191F: ≈ 3.6:1  (AA Large / decorative)
+     424B5C on #16191F: ≈ 2.3:1  (decorative only — not for content)  */
+  --md-sys-color-on-surface: #EEF2F7;
+  --md-sys-color-on-surface-variant: #8E9BAE;
+  --md-sys-color-text-muted: #637483;
+  /* raised from 4B5E72 */
+  --md-sys-color-text-disabled: #424B5C;
+  /* decorative only */
+  --md-sys-color-outline: rgba(255, 255, 255, 0.07);
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.04);
+
+  /* ── Semantic glow shadows ──────────────────────────────────  */
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
+  --glow-brand-red: 0 0 20px rgba(211, 47, 47, 0.28);
+  --glow-sos-red: 0 0 28px rgba(255, 23, 68, 0.40);
+  --glow-safe-green: 0 0 18px rgba(46, 125, 82, 0.25);
+  --glow-ai-blue: 0 0 18px rgba(25, 118, 210, 0.28);
+
+  /* ── Border radii — MD3 ───────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Typography ─────────────────────────────────────────────  */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-display: clamp(2rem, 4vw, 2.8rem);
+  --text-headline: clamp(1.25rem, 2vw, 1.75rem);
+  --text-title: 1.125rem;
+  --text-body: 0.9375rem;
+  --text-label: 0.8125rem;
+  --text-caption: 0.6875rem;
+
+  /* ── Motion / Easing ────────────────────────────────────────  */
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-decel: cubic-bezier(0, 0, 0.2, 1);
+  --easing-accel: cubic-bezier(0.3, 0, 1, 1);
+  --duration-short: 150ms;
+  --duration-medium: 250ms;
+  --duration-long: 400ms;
 }
 
-html, body {
-  height: 100%;
+/* ── Base ─────────────────────────────────────────────────── */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
   font-family: var(--font-sans);
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
 }
 
-/* ── Scrollbar ─────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-secondary); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-/* ── Utility Classes ───────────────────────────────────────── */
-.glass {
-  background: var(--bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+::-webkit-scrollbar-track {
+  background: var(--md-sys-color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-surface-container-highest);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Focus visible ────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-ai-blue);
+  /* blue = action/navigation, not alarm */
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Typography classes ───────────────────────────────────── */
+.md-display-large {
+  font-size: var(--text-display);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.md-headline-large {
+  font-size: var(--text-headline);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.md-title-medium {
+  font-size: var(--text-title);
+  font-weight: 700;
+}
+
+.md-body-medium {
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.md-label-large {
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.md-caption {
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Surface cards ────────────────────────────────────────── */
+.md-surface {
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
 }
 
+.md-surface-container {
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-lg);
+}
+
+.md-glass {
+  background: rgba(15, 17, 23, 0.88);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Badges ───────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.badge-red    { background: var(--red-glow);   color: var(--red);   border: 1px solid var(--border-accent); }
-.badge-green  { background: var(--green-glow); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
-.badge-yellow { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid rgba(234,179,8,0.3); }
-.badge-blue   { background: var(--blue-glow);  color: var(--blue);  border: 1px solid rgba(59,130,246,0.3); }
-
-/* ── Pulse animation for live indicators ───────────────────── */
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
-  50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+/* Semantic badge colors */
+.badge-red {
+  background: var(--color-red-container);
+  color: var(--color-red-on-container);
+  border: 1px solid rgba(211, 47, 47, 0.25);
 }
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
-  50%       { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+
+.badge-green {
+  background: var(--color-green-container);
+  color: var(--color-green-on-container);
+  border: 1px solid rgba(46, 125, 82, 0.25);
 }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-.pulse-red   { animation: pulse-red   1.5s infinite; }
-.pulse-green { animation: pulse-green 1.5s infinite; }
-.fade-in     { animation: fadeIn 0.3s ease forwards; }
-.slide-in    { animation: slideIn 0.3s ease forwards; }
+.badge-blue {
+  background: var(--color-blue-container);
+  color: var(--color-blue-on-container);
+  border: 1px solid rgba(25, 118, 210, 0.25);
+}
 
-/* ── Button styles ─────────────────────────────────────────── */
+.badge-amber {
+  background: var(--color-amber-container);
+  color: var(--color-warn-amber);
+  border: 1px solid rgba(245, 124, 0, 0.25);
+}
+
+/* Active emergency — maximum urgency badge */
+.badge-sos {
+  background: rgba(255, 23, 68, 0.15);
+  color: var(--color-sos-red);
+  border: 1px solid rgba(255, 23, 68, 0.40);
+  animation: pulse-sos 1.4s ease-in-out infinite;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-label);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-short) var(--easing-standard);
   border: none;
   outline: none;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* Primary CTA — brandRed, NOT sosRed */
 .btn-primary {
-  background: var(--gradient-red);
-  color: white;
-  box-shadow: var(--shadow-red);
+  background: var(--color-brand-red);
+  color: #FFFFFF;
+  padding: 10px 20px;
+  box-shadow: var(--shadow-sm);
 }
-.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.btn-secondary {
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--glow-brand-red);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  filter: brightness(0.92);
+}
+
+/* Emergency trigger — sosRed for active SOS elements */
+.btn-sos {
+  background: var(--color-sos-red);
+  color: #FFFFFF;
+  padding: 10px 20px;
+  box-shadow: var(--glow-sos-red);
+}
+
+.btn-sos:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 36px rgba(255, 23, 68, 0.55);
+}
+
+.btn-tonal {
+  background: var(--color-red-container);
+  color: var(--color-red-on-container);
+  padding: 10px 20px;
+}
+
+.btn-tonal:hover {
+  background: rgba(211, 47, 47, 0.18);
+}
+
+.btn-outlined {
   background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-.btn-secondary:hover { background: var(--bg-card); color: var(--text-primary); }
-
-/* ── Map container ─────────────────────────────────────────── */
-.map-container {
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 9px 18px;
+  border: 1px solid var(--md-sys-color-outline);
 }
 
-/* ── Status dot ────────────────────────────────────────────── */
+.btn-outlined:hover {
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--color-brand-red);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-text:hover {
+  background: var(--color-red-container);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+.btn-icon:hover {
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* ── Status dots — semantically meaningful colors ─────────── */
 .status-dot {
+  display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  display: inline-block;
   flex-shrink: 0;
 }
-.status-dot-red    { background: var(--red);    animation: pulse-red   1.5s infinite; }
-.status-dot-green  { background: var(--green);  animation: pulse-green 1.5s infinite; }
-.status-dot-yellow { background: var(--yellow); }
-.status-dot-blue   { background: var(--blue); }
 
-/* ── Leaflet overrides ─────────────────────────────────────── */
-.leaflet-container { background: #0a0e1a !important; }
-.leaflet-tile { filter: brightness(0.6) saturate(0.8) hue-rotate(200deg); }
-.leaflet-popup-content-wrapper {
-  background: var(--bg-card) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-card) !important;
+/* LIVE / monitoring: safeGreen — calm, reassuring */
+.status-dot-green {
+  background: var(--color-safe-green);
+  animation: pulse-green 1.5s infinite;
 }
-.leaflet-popup-tip { background: var(--bg-card) !important; }
+
+/* Active emergency: sosRed — maximum urgency only */
+.status-dot-sos {
+  background: var(--color-sos-red);
+  animation: pulse-sos 1.2s infinite;
+}
+
+/* Error state: crashRed */
+.status-dot-red {
+  background: var(--color-crash-red);
+  animation: pulse-brand-red 1.5s infinite;
+}
+
+.status-dot-amber {
+  background: var(--color-warn-amber);
+}
+
+.status-dot-blue {
+  background: var(--color-ai-blue);
+}
+
+.status-dot-muted {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+/* ── Divider ──────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  width: 100%;
+  background: var(--md-sys-color-outline);
+}
+
+/* ── Form elements ────────────────────────────────────────── */
+.md-text-field {
+  width: 100%;
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  color: var(--md-sys-color-on-surface);
+  outline: none;
+  transition: border-color var(--duration-short) var(--easing-standard),
+    box-shadow var(--duration-short) var(--easing-standard);
+}
+
+.md-text-field::placeholder {
+  color: var(--md-sys-color-text-muted);
+}
+
+.md-text-field:focus {
+  border-color: var(--color-brand-red);
+  border-width: 2px;
+  /* Blue focus ring would normally be used but brandRed is appropriate
+     here since this is a safety app's primary auth form */
+  box-shadow: 0 0 0 3px var(--color-red-container);
+}
+
+/* ── MD3 Chip ─────────────────────────────────────────────── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+/* ── Status indicators — contextual semantic panel ─────────── */
+.stat-panel {
+  padding: 12px 16px;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-md);
+}
+
+.stat-panel.stat-safe {
+  border-color: rgba(46, 125, 82, 0.22);
+}
+
+.stat-panel.stat-warning {
+  border-color: rgba(245, 124, 0, 0.22);
+}
+
+.stat-panel.stat-critical {
+  border-color: rgba(229, 57, 53, 0.25);
+}
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes pulse-sos {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 23, 68, 0);
+  }
+}
+
+@keyframes pulse-brand-red {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px rgba(211, 47, 47, 0);
+  }
+}
+
+@keyframes pulse-green {
+
+  /* safeGreen pulse — lower amplitude than SOS for cognitive calmness */
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 125, 82, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(46, 125, 82, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.fade-in {
+  animation: fadeIn var(--duration-medium) var(--easing-decel) forwards;
+}
+
+.slide-in {
+  animation: slideRight var(--duration-medium) var(--easing-decel) forwards;
+}
+
+/* ── Skeleton loader ──────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+      var(--md-sys-color-surface-container) 25%,
+      var(--md-sys-color-surface-container-high) 50%,
+      var(--md-sys-color-surface-container) 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Leaflet map overrides ────────────────────────────────── */
+.leaflet-container {
+  background: var(--md-sys-color-background) !important;
+}
+
+.leaflet-tile {
+  filter: brightness(0.52) saturate(0.65) hue-rotate(200deg);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--md-sys-color-surface-container-high) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: 1px solid var(--md-sys-color-outline) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--md-sys-color-surface-container-high) !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--md-sys-color-on-surface-variant) !important;
+}
+
+.leaflet-control-zoom {
+  background: var(--md-sys-color-surface-container-high) !important;
+  border: 1px solid var(--md-sys-color-outline) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: transparent !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  border-color: var(--md-sys-color-outline) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--md-sys-color-surface-container-highest) !important;
+  color: var(--md-sys-color-on-surface) !important;
+}
+
+/* ── Responsive helpers ───────────────────────────────────── */
+.md-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+/* ── Tooltip ──────────────────────────────────────────────── */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fadeIn var(--duration-short) var(--easing-decel);
+}
+
+/* ── Accessibility: reduce motion ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

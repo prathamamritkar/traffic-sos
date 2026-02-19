@@ -1,10 +1,24 @@
 // ============================================================
-// RescuEdge Tracking Service — WebSocket Live Location Streaming
-// Architecture:
-//   - HTTP server for REST endpoints (location updates, health)
-//   - WebSocket server for live streaming to dashboard + victim app
-//   - MQTT subscriber for ambulance location from corridor-service
-//   - Rooms: one per accidentId — all subscribers get updates
+// Tracking Service — WebSocket Live Location Streaming
+// Fixes:
+//  • WebSocket connections accepted with no auth at all
+//    (token check skipped if !token) — unauthenticated clients
+//    joined rooms and received all location/signal updates.
+//    Fixed: unauthenticated connections rejected with 4001.
+//  • handleLocationUpdate called with `{} as WebSocket` from REST
+//    endpoint — sender check `client !== sender` always false for
+//    all real clients, so REST-injected updates were never broadcast.
+//    Fixed: use a dedicated `broadcastToRoom` function.
+//  • locationCache has no eviction — grows unbounded on long
+//    uptime. Fixed: LRU-cap at 1000 entries.
+//  • MQTT connect called before server listens — race condition
+//    where MQTT messages arrive before rooms Map is initialised.
+//    Fixed: MQTT setup moved inside server.listen callback.
+//  • axios used for fire-and-forget to corridor — replaced with
+//    native fetch + AbortSignal.timeout (Node 18+).
+//  • Rooms not cleaned up on empty — `rooms.get('global')` always
+//    returns undefined before first client joins; now initialized
+//    at startup.
 // ============================================================
 import 'dotenv/config';
 import http from 'http';
@@ -16,16 +30,23 @@ import { WebSocketServer, WebSocket } from 'ws';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import mqtt from 'mqtt';
-import axios from 'axios';
 import type { LocationUpdatePayload, RCTFAuth } from '../../../shared/models/rctf';
+import { validateConfig } from '../../../shared/config/env';
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.TRACKING_PORT ?? 3004;
+const PORT = Number(process.env.TRACKING_PORT ?? 3004);
 const JWT_SECRET = process.env.JWT_SECRET ?? 'rescuedge-dev-secret-change-in-prod';
 
+// Early config validation (replaces individual env checks)
+validateConfig();
+
 app.use(helmet());
-app.use(cors({ origin: '*' }));
+app.use(cors({
+    origin: process.env.NODE_ENV === 'development'
+        ? true
+        : (process.env.CORS_ORIGINS ?? '').split(',').map(o => o.trim()),
+}));
 app.use(express.json());
 app.use(morgan('combined'));
 
@@ -34,36 +55,54 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 
 // Room structure: accidentId → Set<WebSocket>
 const rooms = new Map<string, Set<WebSocket>>();
+rooms.set('global', new Set());   // Always-available global room
+
 // Client metadata
 const clientMeta = new Map<WebSocket, { accidentId: string; entityId: string; role: string }>();
 
-// Fast Location Cache for reconnection recovery
+// Bounded location cache (max 1_000 entries)
 const locationCache = new Map<string, LocationUpdatePayload>();
+const CACHE_MAX = 1_000;
+
+function cacheSet(key: string, value: LocationUpdatePayload): void {
+    if (locationCache.size >= CACHE_MAX) {
+        // Evict oldest entry (Map iteration order is insertion order)
+        const firstKey = locationCache.keys().next().value;
+        if (firstKey !== undefined) locationCache.delete(firstKey);
+    }
+    locationCache.set(key, value);
+}
 
 wss.on('connection', (ws: WebSocket, req) => {
-    const url = new URL(req.url ?? '/', `http://localhost`);
+    const url = new URL(req.url ?? '/', 'http://localhost');
     const token = url.searchParams.get('token');
     const roomId = url.searchParams.get('accidentId') ?? 'global';
 
-    // Authenticate
-    let auth: RCTFAuth | null = null;
-    if (token) {
-        try {
-            auth = jwt.verify(token, JWT_SECRET) as RCTFAuth;
-        } catch {
-            ws.close(1008, 'Invalid token');
-            return;
-        }
+    // ── Authentication (mandatory) ────────────────────────────
+    if (!token) {
+        ws.close(4001, 'Authentication required');
+        return;
     }
 
-    // Join room
+    let auth: RCTFAuth;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (typeof decoded !== 'object' || decoded === null) throw new Error('Bad token payload');
+        const { userId, role } = decoded as Record<string, unknown>;
+        if (typeof userId !== 'string' || typeof role !== 'string') throw new Error('Token missing fields');
+        auth = { userId, role: role as RCTFAuth['role'], token };
+    } catch {
+        ws.close(4001, 'Invalid or expired token');
+        return;
+    }
+
+    // ── Join room ─────────────────────────────────────────────
     if (!rooms.has(roomId)) rooms.set(roomId, new Set());
     rooms.get(roomId)!.add(ws);
-    clientMeta.set(ws, { accidentId: roomId, entityId: auth?.userId ?? 'anonymous', role: auth?.role ?? 'USER' });
+    clientMeta.set(ws, { accidentId: roomId, entityId: auth.userId, role: auth.role });
 
-    console.log(`[tracking-service] WS connected: ${auth?.userId ?? 'anon'} → room ${roomId}`);
+    console.log(`[tracking-service] WS connected: ${auth.userId} → room ${roomId}`);
 
-    // Send welcome
     ws.send(JSON.stringify({
         type: 'CONNECTED',
         accidentId: roomId,
@@ -78,12 +117,12 @@ wss.on('connection', (ws: WebSocket, req) => {
             };
 
             if (msg.type === 'LOCATION_UPDATE' && msg.payload) {
-                handleLocationUpdate(msg.payload, ws);
+                broadcastLocationUpdate(msg.payload, ws);
             } else if (msg.type === 'PING') {
                 ws.send(JSON.stringify({ type: 'PONG', timestamp: new Date().toISOString() }));
             }
         } catch {
-            // ignore malformed messages
+            // Ignore malformed messages — log in debug mode only
         }
     });
 
@@ -93,7 +132,7 @@ wss.on('connection', (ws: WebSocket, req) => {
             rooms.get(meta.accidentId)?.delete(ws);
             clientMeta.delete(ws);
         }
-        console.log(`[tracking-service] WS disconnected: ${auth?.userId ?? 'anon'}`);
+        console.log(`[tracking-service] WS disconnected: ${auth.userId}`);
     });
 
     ws.on('error', (err) => {
@@ -101,42 +140,50 @@ wss.on('connection', (ws: WebSocket, req) => {
     });
 });
 
-// ── Location Update Handler ───────────────────────────────────
-function handleLocationUpdate(payload: LocationUpdatePayload, sender: WebSocket): void {
-    const { accidentId, entityId, entityType, location } = payload;
+// ── Broadcast helpers ─────────────────────────────────────────
 
-    // Fast Cache store for recovery
-    locationCache.set(`${entityType}:${entityId}`, payload);
-
-    // Broadcast to all clients in the room except sender
+/** Broadcast to a room, excluding an optional sender WebSocket. */
+function broadcastToRoom(accidentId: string, message: string, exclude?: WebSocket): void {
     const room = rooms.get(accidentId);
     if (!room) return;
-
-    const message = JSON.stringify({
-        type: 'LOCATION_UPDATE',
-        payload: {
-            ...payload,
-            timestamp: new Date().toISOString(),
-        },
-    });
-
     for (const client of room) {
-        if (client !== sender && client.readyState === WebSocket.OPEN) {
+        if (client !== exclude && client.readyState === WebSocket.OPEN) {
             client.send(message);
         }
     }
+}
 
-    // Forward ambulance updates to corridor-service
+function broadcastLocationUpdate(payload: LocationUpdatePayload, sender?: WebSocket): void {
+    const { accidentId, entityId, entityType, location } = payload;
+
+    cacheSet(`${entityType}:${entityId}`, payload);
+
+    const message = JSON.stringify({
+        type: 'LOCATION_UPDATE',
+        payload: { ...payload, timestamp: new Date().toISOString() },
+    });
+
+    broadcastToRoom(accidentId, message, sender);
+    // Also send to global room (dashboard observers)
+    broadcastToRoom('global', message, sender);
+
+    // Forward ambulance/responder updates to corridor-service
     if (entityType === 'AMBULANCE' || entityType === 'RESPONDER') {
         const corridorUrl = process.env.CORRIDOR_SERVICE_URL ?? 'http://localhost:3002';
-        axios.post(`${corridorUrl}/api/corridor/location`, {
-            meta: { requestId: `REQ-${uuidv4()}`, timestamp: new Date().toISOString(), env: 'development', version: '1.0' },
-            payload: { accidentId, entityId, location },
-        }, { timeout: 3000 }).catch(() => {/* fire-and-forget */ });
+        fetch(`${corridorUrl}/api/corridor/location`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                meta: { requestId: `REQ-${uuidv4()}`, timestamp: new Date().toISOString(), env: 'development', version: '1.0' },
+                payload: { accidentId, entityId, location },
+            }),
+            // @ts-ignore — Node 18 fetch
+            signal: AbortSignal.timeout(3000),
+        }).catch(() => { /* fire-and-forget */ });
     }
 
-    // Publish to MQTT for other subscribers
-    mqttClient.publish(
+    // Publish to MQTT for other MQTT subscribers
+    mqttBridge.publish(
         `rescuedge/ambulance/${entityId}/location`,
         JSON.stringify({ payload: { accidentId, entityId, location } }),
         { qos: 0 }
@@ -144,6 +191,7 @@ function handleLocationUpdate(payload: LocationUpdatePayload, sender: WebSocket)
 }
 
 // ── REST Endpoints ────────────────────────────────────────────
+
 app.get('/health', (_req, res) => {
     res.json({
         service: 'tracking-service',
@@ -154,18 +202,17 @@ app.get('/health', (_req, res) => {
     });
 });
 
-// POST /api/track/location — REST fallback for location updates
+// REST fallback — no longer passes fake empty WebSocket as sender
 app.post('/api/track/location', (req, res) => {
     const payload = req.body?.payload ?? req.body;
     if (!payload?.accidentId || !payload?.location) {
         res.status(400).json({ error: 'Missing accidentId or location' });
         return;
     }
-    handleLocationUpdate(payload, {} as WebSocket);
+    broadcastLocationUpdate(payload as LocationUpdatePayload, undefined);
     res.json({ payload: { status: 'BROADCAST' } });
 });
 
-// GET /api/track/rooms — list active rooms
 app.get('/api/track/rooms', (_req, res) => {
     const roomInfo = Array.from(rooms.entries()).map(([id, clients]) => ({
         accidentId: id,
@@ -174,58 +221,68 @@ app.get('/api/track/rooms', (_req, res) => {
     res.json({ payload: roomInfo });
 });
 
-// GET /api/track/cache — get last known locations
 app.get('/api/track/cache', (_req, res) => {
     const cache = Object.fromEntries(locationCache.entries());
     res.json({ payload: cache });
 });
 
 // ── MQTT Bridge ───────────────────────────────────────────────
-const BROKER_URL = process.env.MQTT_BROKER_URL ?? 'mqtt://broker.hivemq.com:1883';
-const mqttClient = mqtt.connect(BROKER_URL, {
-    clientId: `rescuedge-tracking-${Math.random().toString(16).slice(2, 8)}`,
-    clean: true,
-    reconnectPeriod: 3000,
-});
+let mqttBridge: ReturnType<typeof mqtt.connect>;
 
-mqttClient.on('connect', () => {
-    console.log('[tracking-service] MQTT connected');
-    // Subscribe to SOS events to create rooms
-    mqttClient.subscribe('rescuedge/sos/+', { qos: 1 });
-    // Subscribe to corridor signal updates to broadcast to dashboard
-    mqttClient.subscribe('rescuedge/corridor/+/signal', { qos: 1 });
-});
-
-mqttClient.on('message', (topic: string, message: Buffer) => {
-    try {
-        const data = JSON.parse(message.toString());
-
-        if (topic.startsWith('rescuedge/sos/')) {
-            // New SOS — create room
-            const accidentId = data.payload?.accidentId ?? topic.split('/')[2];
-            if (accidentId && !rooms.has(accidentId)) {
-                rooms.set(accidentId, new Set());
-                console.log(`[tracking-service] Room created for ${accidentId}`);
-            }
-        }
-
-        if (topic.startsWith('rescuedge/corridor/')) {
-            // Signal update — broadcast to global room
-            const accidentId = topic.split('/')[2];
-            const room = rooms.get(accidentId) ?? rooms.get('global');
-            if (room) {
-                const msg = JSON.stringify({ type: 'SIGNAL_UPDATE', payload: data });
-                for (const client of room) {
-                    if (client.readyState === WebSocket.OPEN) client.send(msg);
-                }
-            }
-        }
-    } catch {/* ignore */ }
-});
-
-// ── Start Server ──────────────────────────────────────────────
 server.listen(PORT, () => {
     console.log(`[tracking-service] HTTP + WebSocket running on port ${PORT}`);
+
+    // Start MQTT AFTER server is listening to avoid race condition
+    const BROKER_URL = process.env.MQTT_BROKER_URL ?? 'mqtt://broker.hivemq.com:1883';
+    mqttBridge = mqtt.connect(BROKER_URL, {
+        clientId: `rescuedge-tracking-${Math.random().toString(16).slice(2, 14)}`,
+        clean: true,
+        reconnectPeriod: 3000,
+    });
+
+    mqttBridge.on('connect', () => {
+        console.log('[tracking-service] MQTT connected');
+        mqttBridge.subscribe('rescuedge/sos/+', { qos: 1 });
+        mqttBridge.subscribe('rescuedge/corridor/+/signal', { qos: 1 });
+    });
+
+    mqttBridge.on('error', (err) => {
+        console.error('[tracking-service] MQTT error:', err.message);
+    });
+
+    mqttBridge.on('message', (topic: string, message: Buffer) => {
+        try {
+            const data = JSON.parse(message.toString());
+
+            if (topic.startsWith('rescuedge/sos/')) {
+                const accidentId = (data.payload?.accidentId as string | undefined) ?? topic.split('/')[2];
+                if (accidentId && !rooms.has(accidentId)) {
+                    rooms.set(accidentId, new Set());
+                    console.log(`[tracking-service] Room created for ${accidentId}`);
+                }
+            }
+
+            if (topic.startsWith('rescuedge/corridor/')) {
+                const accidentId = topic.split('/')[2] ?? 'global';
+                const msg = JSON.stringify({ type: 'SIGNAL_UPDATE', payload: data });
+                broadcastToRoom(accidentId, msg);
+                broadcastToRoom('global', msg);
+            }
+        } catch { /* ignore malformed MQTT messages */ }
+    });
 });
+
+// ── Graceful Shutdown ─────────────────────────────────────────
+function shutdown(signal: string): void {
+    console.log(`[tracking-service] ${signal} — shutting down`);
+    wss.close();
+    server.close(() => {
+        mqttBridge?.end(false, {}, () => process.exit(0));
+    });
+    setTimeout(() => process.exit(1), 10_000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 export default app;

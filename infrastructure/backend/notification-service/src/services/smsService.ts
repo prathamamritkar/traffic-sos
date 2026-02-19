@@ -1,6 +1,11 @@
 // ============================================================
 // SMS Service — Twilio (free trial, no expiry for demo)
-// Sends SMS to victim's emergency contacts
+// Fixes:
+//   • Vulnerability: SMS content logging to console was unconditioned.
+//     Now gated to `process.env.NODE_ENV === 'development'` or if
+//     specifically enabled via `DEBUG_SMS=true`.
+//   • Added basic E.164 phone number sanitation for the Twilio call.
+//   • PUBLIC_URL fallback tightened.
 // ============================================================
 import twilio from 'twilio';
 
@@ -13,7 +18,9 @@ function getClient() {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
 
     if (!accountSid || !authToken) {
-        console.warn('[notification-service] Twilio credentials not configured — SMS disabled');
+        if (process.env.NODE_ENV !== 'production') {
+            console.warn('[notification-service] Twilio credentials not configured — SMS disabled');
+        }
         return null;
     }
 
@@ -23,24 +30,30 @@ function getClient() {
 
 export async function sendSMS(to: string, body: string): Promise<boolean> {
     const client = getClient();
+
+    // Sanitize recipient number
+    const sanitizedTo = to.startsWith('+') ? to : `+${to}`;
+
     if (!client) {
-        // Fallback logging for hackathon demo
-        console.log(`[notification-service] [SMS_STUB] To: ${to}\nMessage: ${body}`);
+        // Fallback logging: only in dev or if DEBUG_SMS is true
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SMS === 'true') {
+            console.log(`[notification-service] [SMS_STUB] To: ${sanitizedTo}\nMessage: ${body}`);
+        }
         return true;
     }
 
     const from = process.env.TWILIO_PHONE_NUMBER;
     if (!from) {
-        console.warn('[notification-service] TWILIO_PHONE_NUMBER not set');
+        console.error('[notification-service] TWILIO_PHONE_NUMBER not set — SMS cannot be sent');
         return false;
     }
 
     try {
-        const message = await client.messages.create({ to, from, body });
-        console.log(`[notification-service] SMS sent to ${to}: ${message.sid}`);
+        const message = await client.messages.create({ to: sanitizedTo, from, body });
+        console.log(`[notification-service] SMS sent to ${sanitizedTo}: ${message.sid}`);
         return true;
-    } catch (err) {
-        console.error(`[notification-service] SMS failed to ${to}:`, err);
+    } catch (err: any) {
+        console.error(`[notification-service] SMS failed to ${sanitizedTo}:`, err.message || err);
         return false;
     }
 }
@@ -51,7 +64,14 @@ export async function sendEmergencySMS(
     location: { lat: number; lng: number }
 ): Promise<void> {
     const mapsLink = `https://maps.google.com/?q=${location.lat},${location.lng}`;
-    const broadcastUrl = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/track/${accidentId}/broadcast`;
+
+    // Fallback to localhost only in development
+    const dashboardHost = process.env.PUBLIC_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+    if (!dashboardHost) {
+        console.warn('[notification-service] PUBLIC_URL not set — broadcast link will be missing from SMS');
+    }
+
+    const broadcastUrl = `${dashboardHost}/track/${accidentId}/broadcast`;
 
     const body = [
         `🚨 EMERGENCY ALERT — RescuEdge`,
@@ -62,5 +82,6 @@ export async function sendEmergencySMS(
         `Emergency services are enroute. Stay calm.`,
     ].join('\n');
 
+    // Basic async orchestration
     await Promise.allSettled(contacts.map((contact) => sendSMS(contact, body)));
 }

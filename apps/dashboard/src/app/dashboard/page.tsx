@@ -11,7 +11,7 @@ import { useLiveData } from '@/hooks/useLiveData';
 import type { CaseRecord, TrafficSignalPayload } from '@/types/rctf';
 import styles from './dashboard.module.css';
 
-// Dynamically import LiveMap (Leaflet requires window)
+// Dynamically import LiveMap — Leaflet requires window (not available on server)
 const LiveMap = dynamic(() => import('@/components/LiveMap'), {
     ssr: false,
     loading: () => (
@@ -21,7 +21,7 @@ const LiveMap = dynamic(() => import('@/components/LiveMap'), {
     ),
 });
 
-// Infrastructure signals
+// ── Seed signals ─────────────────────────────────────────────────
 const INITIAL_SIGNALS: TrafficSignalPayload[] = [
     { signalId: 'SIG-001', junctionId: 'Deccan Gymkhana', location: { lat: 18.5167, lng: 73.8478 }, state: 'GREEN', duration: 45, corridor: true },
     { signalId: 'SIG-002', junctionId: 'FC Road Junction', location: { lat: 18.5236, lng: 73.8478 }, state: 'GREEN', duration: 45, corridor: true },
@@ -31,35 +31,71 @@ const INITIAL_SIGNALS: TrafficSignalPayload[] = [
     { signalId: 'SIG-006', junctionId: 'Kothrud', location: { lat: 18.5074, lng: 73.8077 }, state: 'RED', duration: 0, corridor: false },
 ];
 
+interface StoredUser {
+    name: string;
+    role: string;
+    email: string;
+}
+
 export default function DashboardPage() {
     const router = useRouter();
-    const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(null);
+    const [user, setUser] = useState<StoredUser | null>(null);
     const [selectedCase, setSelected] = useState<CaseRecord | null>(null);
     const [signals, setSignals] = useState<TrafficSignalPayload[]>(INITIAL_SIGNALS);
 
     const { cases, ambulanceLocations, connected } = useLiveData();
 
-    // Auth guard
+    // ── Auth guard ───────────────────────────────────────────────
     useEffect(() => {
-        const stored = localStorage.getItem('rescuedge_user');
-        if (!stored) { router.push('/'); return; }
-        setUser(JSON.parse(stored));
+        try {
+            const stored = localStorage.getItem('rescuedge_user');
+            if (!stored) {
+                router.replace('/');
+                return;
+            }
+            const parsed = JSON.parse(stored) as StoredUser;
+            // Minimal shape validation before trusting localStorage data
+            if (!parsed?.name || !parsed?.role) {
+                localStorage.removeItem('rescuedge_user');
+                localStorage.removeItem('rescuedge_token');
+                router.replace('/');
+                return;
+            }
+            setUser(parsed);
+        } catch {
+            // Corrupt localStorage data — clear and redirect to login
+            localStorage.removeItem('rescuedge_user');
+            localStorage.removeItem('rescuedge_token');
+            router.replace('/');
+        }
     }, [router]);
 
-    // Auto-select first active case
+    // ── Auto-select first active case (only on initial load) ─────
     useEffect(() => {
         if (!selectedCase && cases.length > 0) {
-            const active = cases.find(c => c.status !== 'RESOLVED' && c.status !== 'CANCELLED');
+            const active = cases.find(
+                (c) => c.status !== 'RESOLVED' && c.status !== 'CANCELLED'
+            );
             if (active) setSelected(active);
         }
     }, [cases, selectedCase]);
 
-    // Listen for real-time signal updates from useLiveData
+    // ── Keep selectedCase in sync when live data updates it ──────
+    // Without this, MedicalPanel shows stale data after a CASE_UPDATE
     useEffect(() => {
-        const handler = (e: any) => {
-            const update = e.detail as TrafficSignalPayload;
-            setSignals(prev => {
-                const index = prev.findIndex(s => s.signalId === update.signalId);
+        if (!selectedCase) return;
+        const fresh = cases.find((c) => c.accidentId === selectedCase.accidentId);
+        if (fresh && fresh !== selectedCase) {
+            setSelected(fresh);
+        }
+    }, [cases, selectedCase]);
+
+    // ── Real-time signal updates from WebSocket fan-out ──────────
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const update = (e as CustomEvent<TrafficSignalPayload>).detail;
+            setSignals((prev) => {
+                const index = prev.findIndex((s) => s.signalId === update.signalId);
                 if (index === -1) return [update, ...prev];
                 const next = [...prev];
                 next[index] = update;
@@ -70,25 +106,28 @@ export default function DashboardPage() {
         return () => window.removeEventListener('rescuedge-signal-update', handler);
     }, []);
 
-    // Simulate signal timers for corridor cases
+    // ── Simulate corridor signal countdown ───────────────────────
     useEffect(() => {
         const interval = setInterval(() => {
-            setSignals(prev => prev.map(s => ({
-                ...s,
-                duration: s.corridor ? Math.max(0, (s.duration ?? 45) - 1) : s.duration,
-            })));
+            setSignals((prev) =>
+                prev.map((s) => ({
+                    ...s,
+                    duration: s.corridor ? Math.max(0, (s.duration ?? 45) - 1) : s.duration,
+                }))
+            );
         }, 1000);
         return () => clearInterval(interval);
     }, []);
 
+    // ── Don't render until auth resolves ────────────────────────
     if (!user) return null;
 
-    const active = cases.filter(c => c.status !== 'RESOLVED' && c.status !== 'CANCELLED').length;
-    const resolved = cases.filter(c => c.status === 'RESOLVED').length;
+    const active = cases.filter((c) => c.status !== 'RESOLVED' && c.status !== 'CANCELLED').length;
+    const resolved = cases.filter((c) => c.status === 'RESOLVED').length;
 
     return (
         <div className={styles.layout}>
-            <Navbar user={user} connected={connected} />
+            <Navbar user={user} connected={connected} activeIncidents={active} />
 
             <div className={styles.body}>
                 {/* Left sidebar */}

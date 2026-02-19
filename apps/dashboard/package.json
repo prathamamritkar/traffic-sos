@@ -10,7 +10,6 @@
     },
     "dependencies": {
         "@types/lodash": "^4.17.23",
-        "axios": "^1.6.5",
         "clsx": "^2.1.0",
         "date-fns": "^3.3.1",
         "framer-motion": "^12.34.2",

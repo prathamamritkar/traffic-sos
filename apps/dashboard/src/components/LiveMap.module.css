@@ -23,3 +23,26 @@
     flex-direction: column;
     gap: 6px;
 }
+
+/* ── Corridor signal pulse animation ─────────────────────────────
+   Defined here (not inside per-marker divIcon HTML) to prevent the
+   browser accumulating O(n) <style> nodes as markers are refreshed.
+   The class name must be global (not CSS-module-scoped) because it is
+   applied inside Leaflet-managed DOM outside React's render tree.       */
+:global(.leaflet-corridor-pulse) {
+    animation: corridorPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes corridorPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #22c55e;
+    }
+
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 22px #22c55e;
+    }
+}

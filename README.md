@@ -1,122 +1,83 @@
-# RescuEdge — ADGC System
-### Accident Detection & Green Corridor — Unified Emergency Response
+# RescuEdge — Personal Safety Node (ADGC)
+### Unified Emergency Response & Victim-Centric Safety Engine
 
-> **Dual-app emergency response ecosystem** that detects road accidents in real-time, dispatches the nearest responder, and creates a Green Corridor for ambulances — all with zero-config, free-tier infrastructure.
+> **The ultimate safety companion** that transforms the victim's smartphone into an active emergency broadcast node. Featuring Google Personal Safety parity, offline-first vaulting, and an intelligent "Handover Mode" for bystanders.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Unified Architecture
 
 ```
 Rapid_Rescue/
 ├── apps/
-│   ├── mobile-bystander/   # Flutter — Crash detection, SOS, Vision Intelligence
-│   ├── mobile-responder/   # Flutter — Dispatch alerts, Navigation, Live tracking
-│   └── dashboard/          # Next.js — High-precision command center
+│   ├── personal-safety-node/ # Unified Flutter App: Victim Safety + Rescuer Handover
+│   └── dashboard/            # Next.js — High-precision command center
 └── infrastructure/
-    ├── shared/             # TypeScript — Unified RCTF models and configs
+    ├── shared/               # TypeScript — Unified RCTF models and configs
     └── backend/
-        ├── detection-service/    # Node.js — SOS ingestion & broadcast
-        ├── corridor-service/     # Node.js — Green Corridor management
-        ├── notification-service/  # Node.js — FCM & SMS alerting
-        └── tracking-service/     # Node.js — Real-time location relay
+        ├── detection-service/      # Node.js — SOS ingestion & broadcast
+        ├── corridor-service/       # Node.js — Green Corridor management
+        ├── notification-service/   # Node.js — FCM & SMS alerting
+        └── tracking-service/       # Node.js — Real-time location relay
 ```
 
 ## 🚀 Quick Start
 
 ### 1. Backend Services
-
 ```bash
 # Install and start detection service
 cd infrastructure/backend/detection-service && npm install && npm run dev
-
-# Install and start corridor service
-cd infrastructure/backend/corridor-service && npm install && npm run dev
-
-# ... repeat for other services
 ```
 
 ### 2. Dashboard
-
 ```bash
-cd apps/dashboard
-npm install
-npm run dev
+cd apps/dashboard && npm install && npm run dev
 ```
 
-### 3. Flutter Apps
-
+### 3. Unified Safety Node (Mobile)
 ```bash
-# User App
-cd apps/mobile-bystander && flutter run
-
-# Responder App
-cd apps/mobile-responder && flutter run
+cd apps/personal-safety-node && flutter run
 ```
 
 ---
 
-## 🔑 Environment Variables
+## 🔐 Security & Environment
 
-Copy `infrastructure/shared/config/.env.example` to each service directory as `.env`.
+The backend services enforce **Production Integrity**. If `NODE_ENV=production` is set, the services will **refuse to start** unless the following variables are configured:
 
-**Minimum required for initial load (all free):**
-- `JWT_SECRET` — any random string
-- `MQTT_BROKER_URL` — `mqtt://broker.hivemq.com` (public, no auth)
-- `GEMINI_API_KEY` — Required for bystander AI scene analysis
-- Firebase credentials — Required for FCM push notifications
-- Twilio credentials — Required for emergency SMS alerts
+| Variable | Description | Default (Dev) |
+|----------|-------------|---------------|
+| `JWT_SECRET` | Signing key for RCTF envelopes | `rescuedge-dev-...` |
+| `CORS_ORIGINS` | Allowed dashboard origins | `*` (Dev only) |
+| `MQTT_BROKER_URL` | HiveMQ/Private broker URL | `mqtt://broker...` |
+| `PUBLIC_URL` | Full URL of the dashboard | `http://localhost:3000` |
+
+> **Note:** Run `validateConfig()` at startup to ensure all critical dependencies (FCM, Twilio, Gemini) are initialized.
 
 ---
 
-## 🧠 Key Features
+## 🧠 Victim-Centric Ecosystem
 
-### User App
-- **4-Stage Crash Detection:** Pulse-drop, G-force impact, ML classifier, and Gyroscope rollover detection.
-- **15-Second Safety Buffer:** Intelligent cancellation to prevent false alerts.
-- **Bystander AI:** Gemini Flash 1.5 analyzes scene images/audio for severity and hazard detection.
-- **RCTF Integration:** All data communication follows the RescuEdge Common Transfer Format.
-
-### Responder App
-- **Real-time Dispatch:** Push notifications with detailed incident payloads.
-- **Full Victim Profile:** Access to blood group, allergies, and emergency contacts.
-- **Precision Navigation:** Low-latency GPS tracking synced with the command center.
-- **Dynamic Transmission:** Location updates inform the Green Corridor algorithm every 3 seconds.
+### Unified Mobile Node
+- **Offline-First Vault:** Personal medical data and emergency contacts are encrypted and available without network.
+- **Google Safety Parity:** Integrated "Safety Check" timer and automatic Car Crash detection.
+- **Handover Mode (Post-Crash):** When an accident is detected, the app shifts into a high-visibility instruction set for bystanders.
+- **Situational Intelligence:** Automated guidance for bystanders to capture 45° scene angles; automatically ingest audio/video for on-device ML processing.
+- **Professional Takeover:** Official responders can log in directly on the victim's device to access advanced vitals logging and status updates.
 
 ### Dashboard Command Center
-- **Live High-Precision Map:** Leaflet-based dark mode interface with real-time marker synchronization.
-- **🔴 Live Evidence Stream:** Displays real-time media chunks from the accident site (Gemini-supported).
-- **Incident Timeline:** Step-by-step visual tracker (Detected → Dispatched → En Route → Arrived).
-- **Adaptive Signal Grid:** Real-time traffic signal management with **Pulsing Green Corridor** visuals.
-- **Smart Viewport:** Automatic map bounds calculation to fit both the ambulance and the accident site.
-
-### Backend Services
-- **MQTT Event Hub:** Low-latency event bus for cross-service communication.
-- **Geospatial Corridor Engine:** Haversine-based junction lookup for automated signal clearance.
-- **Modular Microservices:** Independent services for detection, corridor management, notifications, and tracking.
+- **🔴 Live Evidence Stream:** Displays real-time media chunks processed on the device and relayed via RCTF.
+- **Incident Timeline:** Visual progression from Crash Detected → Handover Active → AI Analysis → Professional Takeover.
+- **Green Corridor Engine:** Automatically creates clear paths for dispatchers en route to the node's GPS coordinates.
 
 ---
 
-## 🏆 RCTF — RescuEdge Common Transfer Format
+## 🏆 Offline-First Resilience
 
-All system components communicate using a unified JSON envelope:
-
-```json
-{
-  "meta": {
-    "requestId": "REQ-uuid",
-    "timestamp": "2026-02-19T00:00:00Z",
-    "env": "production",
-    "version": "1.2"
-  },
-  "auth": {
-    "userId": "U-XXXXXXXX",
-    "role": "ADMIN",
-    "token": "jwt-auth-token"
-  },
-  "payload": { ... }
-}
-```
+The **Personal Safety Node** implements a robust offline queue. If a crash is detected in a zero-network zone:
+1.  **Local Vaulting:** The device stores the AI scene analysis and crash metrics locally.
+2.  **Local Warning:** Siren and Vibration patterns alert nearby people immediately.
+3.  **Automatic Sync:** The moment a 2G/3G/WiFi pulse is detected, the RCTF envelope is broadcast to the global HiveMQ hub.
 
 ---
 
@@ -126,7 +87,6 @@ All system components communicate using a unified JSON envelope:
 |---------|----------|----------|
 | Intelligence | Google Gemini | Scene Analysis & Vision |
 | Event Bus | HiveMQ | Global Message Routing |
-| Push | Firebase | Dispatcher Alerts |
-| Maps | Leaflet/CartoDB | GIS Visualization |
+| Signal Hub | Firebase | Dispatcher Alerts |
+| Context | Leaflet | GIS Visualization |
 | Hosting | Vercel | Production Deployment |
-
