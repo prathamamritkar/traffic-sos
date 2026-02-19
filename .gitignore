@@ -1,49 +1,22 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Next.js
+.next/
+out/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
+# Environment
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# --- Custom Additions for InnovateYou ---
-
-# Ignore the application properties (Crucial for Security/OAuth2)
-**/application.properties
-**/application.yml
-
-# Ignore OS-specific junk
+# OS
 .DS_Store
 Thumbs.db
-
-# Frontend (Angular/Node) ignores - add these if you haven't yet
-**/node_modules/
-**/dist/
-.angular/
