@@ -17,6 +17,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
+import { simpleRouter } from './routes/simple';
 import { sosRouter } from './routes/sos';
 import { healthRouter } from './routes/health';
 import { broadcastRouter } from './routes/broadcast';
@@ -66,6 +67,7 @@ app.use(limiter);
 
 // ── Routes ────────────────────────────────────────────────────
 app.use('/health', healthRouter);
+app.use('/api/simple', simpleRouter); // Added simple router BEFORE auth
 app.use('/api/sos', authMiddleware, sosRouter);
 app.use('/api/broadcast', broadcastRouter);
 
@@ -82,7 +84,7 @@ app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
 app.use(errorHandler);
 
 // ── Start ─────────────────────────────────────────────────────
-const httpServer = app.listen(PORT, () => {
+const httpServer = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[detection-service] Running on port ${PORT} (${process.env.NODE_ENV ?? 'development'})`);
 });
 

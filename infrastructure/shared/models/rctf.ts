@@ -10,6 +10,8 @@ export type CrashType =
     | 'PHONE_DROP'
     | 'POTHOLE'
     | 'HARD_BRAKE'
+    | 'MANUAL_SOS'
+    | 'SAFETY_CHECK_TIMEOUT'
     | 'UNKNOWN';
 export type CaseStatus =
     | 'DETECTED'

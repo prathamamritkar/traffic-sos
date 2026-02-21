@@ -119,6 +119,9 @@ function fireAndForget(url: string, body: unknown, label: string): void {
 
 // ── POST /api/sos ─────────────────────────────────────────────
 sosRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
+    console.log(`[detection-service] 📥 Incoming SOS request from ${req.ip} (RCTF)`);
+    console.log(`[detection-service] Payload size: ${JSON.stringify(req.body).length} bytes`);
+
     // 1. Validate RCTF envelope
     const parsed = SOSBodySchema.safeParse(req.body);
     if (!parsed.success) {

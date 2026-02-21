@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import styles from './Navbar.module.css';
 
 interface NavbarProps {
@@ -104,7 +105,20 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
 
                 {/* ── Center ───────────────────────────────── */}
                 <div className={styles.center} aria-hidden="true">
-                    <span className={styles.centerTitle}>Command Center</span>
+                    <div className={styles.navLinks}>
+                        <Link
+                            href="/dashboard"
+                            className={`${styles.navLink} ${usePathname() === '/dashboard' ? styles.navLinkActive : ''}`}
+                        >
+                            Dashboard
+                        </Link>
+                        <Link
+                            href="/analytics"
+                            className={`${styles.navLink} ${usePathname() === '/analytics' ? styles.navLinkActive : ''}`}
+                        >
+                            Analytics
+                        </Link>
+                    </div>
                 </div>
 
                 {/* ── Right ────────────────────────────────── */}

@@ -40,7 +40,7 @@ app.use('/health', healthRouter);
 app.use('/api/notify', notifyRouter);
 app.use(errorHandler);
 
-const httpServer = app.listen(PORT, () => {
+const httpServer = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[notification-service] Running on port ${PORT}`);
 });
 

@@ -245,7 +245,7 @@ app.get('/api/track/cache', (_req, res) => {
 // ── MQTT Bridge ───────────────────────────────────────────────
 let mqttBridge: ReturnType<typeof mqtt.connect>;
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`[tracking-service] HTTP + WebSocket running on port ${PORT}`);
 
     // Start MQTT AFTER server is listening to avoid race condition

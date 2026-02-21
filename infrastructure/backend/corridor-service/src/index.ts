@@ -62,7 +62,7 @@ mqttClient.on('message', (topic: string, message: Buffer) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
-const httpServer = app.listen(PORT, () => {
+const httpServer = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[corridor-service] Running on port ${PORT}`);
 });
 

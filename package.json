@@ -1,0 +1,23 @@
+{
+  "name": "rapid-rescue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RapidRescue - Emergency Response System",
+  "scripts": {
+    "dev": "concurrently -n \"dashboard,detection,corridor,notification,tracking\" -c \"bgBlue,bgGreen,bgYellow,bgMagenta,bgCyan\" \"npm run dev:dashboard\" \"npm run dev:detection\" \"npm run dev:corridor\" \"npm run dev:notification\" \"npm run dev:tracking\"",
+    "dev:dashboard": "cd apps/dashboard && npm run dev",
+    "dev:detection": "cd infrastructure/backend/detection-service && npm run dev",
+    "dev:corridor": "cd infrastructure/backend/corridor-service && npm run dev",
+    "dev:notification": "cd infrastructure/backend/notification-service && npm run dev",
+    "dev:tracking": "cd infrastructure/backend/tracking-service && npm run dev",
+    "test:twilio": "node test-twilio.js",
+    "install:all": "npm install && cd apps/dashboard && npm install && cd ../../infrastructure/backend/detection-service && npm install && cd ../corridor-service && npm install && cd ../notification-service && npm install && cd ../tracking-service && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "twilio": "^5.12.2"
+  }
+}
