@@ -97,6 +97,10 @@ class AppColors {
   static const aiBlue      = blueBright;   // AI features
   static const warnAmber   = amberAlert;   // warnings
   static const infoAmber   = amberInfo;    // informational tags
+
+  // ── Material 3 ColorScheme aliases ────────────────────────────
+  static const primary   = brandRed; // Aligned with ColorScheme.primary
+  static const onPrimary = white;    // Text/icons on primary surfaces
 }
 
 // ── Typography ────────────────────────────────────────────────
@@ -194,7 +198,7 @@ ThemeData buildAppTheme() {
     ),
 
     // ── Cards ─────────────────────────────────────────────────
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.bg2,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
@@ -347,7 +351,7 @@ ThemeData buildAppTheme() {
     ),
 
     // ── Dialog ────────────────────────────────────────────────
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: AppColors.bg2,
       surfaceTintColor: Colors.transparent,
       elevation: 0,

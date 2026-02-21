@@ -94,7 +94,27 @@ class CrashDetectionService {
     _engineSub?.cancel();
     _engineSub = null;
   }
-  
+
+  /// Simulates a crash detection for testing/demo purposes (DEMO_MODE only)
+  void simulateCrash() {
+    final metrics = CrashMetrics(
+      gForce:            9.5,
+      speedBefore:       60.0,
+      speedAfter:        0.0,
+      mlConfidence:      0.95,
+      crashType:         'SIMULATED',
+      rolloverDetected:  false,
+    );
+
+    _logger.logEvent('CRASH_SIMULATED', metrics.toJson());
+
+    onCrashDetected?.call(CrashDetectionResult(
+      isCrash: true,
+      metrics: metrics,
+      reason:  'Demo Mode Simulation',
+    ));
+  }
+
   void dispose() {
     stopMonitoring();
     _engine.dispose();

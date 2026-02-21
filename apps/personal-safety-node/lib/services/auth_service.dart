@@ -15,7 +15,7 @@ class AuthService {
   AuthService._();
 
   final _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-  final _firebaseAuth = FirebaseAuth.instance;
+  late final FirebaseAuth _firebaseAuth;
   final _storage      = const FlutterSecureStorage();
 
   RCTFAuth? _currentAuth;
@@ -23,9 +23,21 @@ class AuthService {
 
   bool get isAuthenticated => _currentAuth != null;
 
+  /// Initializes Firebase Auth lazily (safe for demo mode without Firebase)
+  void _ensureFirebaseInitialized() {
+    try {
+      _firebaseAuth = FirebaseAuth.instance;
+    } catch (e) {
+      debugPrint('[AuthService] Firebase not initialized: $e');
+      // In demo mode, Firebase won't be available
+      rethrow;
+    }
+  }
+
   // ── Google Sign-In ────────────────────────────────────────
   Future<RCTFAuth?> signInWithGoogle() async {
     try {
+      _ensureFirebaseInitialized();
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null;
 

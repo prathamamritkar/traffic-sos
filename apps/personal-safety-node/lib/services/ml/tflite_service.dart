@@ -1,20 +1,14 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:tflite_v2/tflite_v2.dart';
+// import 'package:tflite_v2/tflite_v2.dart'; // TODO: Add tflite_v2 to pubspec.yaml
 
 import 'sensor_buffer.dart';
 
 class TfliteService {
-  // Model configurations
-  static const String _sensorModel  = 'assets/ml/crash_classifier.tflite';
-  static const String _sensorLabels = 'assets/ml/labels.txt'; // Assuming labels: [normal, crash]
-  
-  // Future: Audio model (YAMNet or similar)
-  // static const String _audioModel = 'assets/ml/audio_classifier.tflite';
+  // Note: Model paths defined but model loading is disabled until tflite_v2 is added
+  // static const String _sensorModel  = 'assets/ml/crash_classifier.tflite';
+  // static const String _sensorLabels = 'assets/ml/labels.txt';
 
   bool _isModelLoaded = false;
   final SensorBuffer _sensorBuffer;
@@ -23,14 +17,16 @@ class TfliteService {
 
   Future<void> init() async {
     try {
-      final res = await Tflite.loadModel(
-        model:      _sensorModel,
-        labels:     _sensorLabels,
-        numThreads: 1, // Single thread for low power
-        isAsset:    true,
-      );
-      _isModelLoaded = res == 'success';
-      debugPrint('TfliteService: Model loaded? $_isModelLoaded');
+      // TODO: Uncomment when tflite_v2 is added to pubspec.yaml
+      // final res = await Tflite.loadModel(
+      //   model:      _sensorModel,
+      //   labels:     _sensorLabels,
+      //   numThreads: 1, // Single thread for low power
+      //   isAsset:    true,
+      // );
+      // _isModelLoaded = res == 'success';
+      _isModelLoaded = false; // Disabled until tflite_v2 is available
+      debugPrint('TfliteService: Model loading disabled (tflite_v2 not in pubspec.yaml)');
     } catch (e) {
       debugPrint('TfliteService: Model load error: $e');
     }
@@ -49,34 +45,37 @@ class TfliteService {
     }
 
     try {
+      // TODO: Uncomment when tflite_v2 is added to pubspec.yaml
       // Get buffer as Byte List (Uint8List) required by tflite_v2
       // Using Float32 underlying buffer converted to bytes
       // Model input assumed to be: [1, 50, 3] float32
-      final inputBytes = _sensorBuffer.getBufferAsUint8List();
+      // final inputBytes = _sensorBuffer.getBufferAsUint8List();
+      //
+      // final recognitions = await Tflite.runModelOnBinary(
+      //   binary:     inputBytes,
+      //   numResults: 2,   // typically "normal", "crash"
+      //   threshold:  0.5, // low threshold to capture potential events
+      //   asynch:     true,
+      // );
+      //
+      // if (recognitions == null || recognitions.isEmpty) {
+      //   return {'isCrash': false, 'confidence': 0.0};
+      // }
+      //
+      // // Check first result
+      // final topResult = recognitions[0];
+      // final label = topResult['label'] as String;
+      // final confidence = (topResult['confidence'] as num).toDouble();
+      //
+      // final isCrash = label == 'crash' && confidence > 0.7; // High confidence needed
+      //
+      // return {
+      //   'isCrash': isCrash,
+      //   'confidence': confidence,
+      //   'label': label,
+      // };
 
-      final recognitions = await Tflite.runModelOnBinary(
-        binary:     inputBytes,
-        numResults: 2,   // typically "normal", "crash"
-        threshold:  0.5, // low threshold to capture potential events
-        asynch:     true,
-      );
-
-      if (recognitions == null || recognitions.isEmpty) {
-        return {'isCrash': false, 'confidence': 0.0};
-      }
-
-      // Check first result
-      final topResult = recognitions[0];
-      final label = topResult['label'] as String;
-      final confidence = (topResult['confidence'] as num).toDouble();
-
-      final isCrash = label == 'crash' && confidence > 0.7; // High confidence needed
-
-      return {
-        'isCrash': isCrash,
-        'confidence': confidence,
-        'label': label,
-      };
+      return {'isCrash': false, 'confidence': 0.0};
     } catch (e) {
       debugPrint('TfliteService: Inference error: $e');
       return {'isCrash': false, 'confidence': 0.0};
@@ -107,6 +106,7 @@ class TfliteService {
   }
 
   void dispose() {
-    Tflite.close();
+    // TODO: Uncomment when tflite_v2 is added to pubspec.yaml
+    // Tflite.close();
   }
 }

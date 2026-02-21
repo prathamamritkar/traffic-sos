@@ -1,10 +1,10 @@
 name: rescuedge_safety_node
 description: RescuEdge Personal Safety Node — Crash detection, Safety Check, and Emergency SOS pipeline
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
+  sdk: ">=3.2.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -28,8 +28,7 @@ dependencies:
   permission_handler: ^11.3.0
   flutter_background_service: ^5.0.7
   flutter_local_notifications: ^17.0.0
-  vibration: ^1.8.4
-  tflite_v2: ^1.0.0
+  vibration: ^3.0.0
   device_info_plus: ^10.1.0
   battery_plus: ^6.0.0
 
@@ -39,7 +38,7 @@ dependencies:
 
   # Networking
   http: ^1.2.0
-  http_parser: ^4.0.2        # MediaType for multipart uploads
+  http_parser: ^4.0.2
   web_socket_channel: ^2.4.0
   mqtt_client: ^10.2.1
 
@@ -52,14 +51,12 @@ dependencies:
 
   # Audio & Video Recording
   camera: ^0.11.0+2
-  record: ^5.1.0
+  record: ^6.0.0
   path: ^1.9.0
   audioplayers: ^6.0.0
 
   # State Management
   provider: ^6.1.1
-  # Note: flutter_riverpod re-exports riverpod — do not add bare `riverpod`
-  # separately as it causes version resolution conflicts.
   flutter_riverpod: ^2.4.10
 
   # Utilities
