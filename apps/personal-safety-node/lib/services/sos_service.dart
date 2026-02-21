@@ -12,6 +12,7 @@
 // ============================================================
 import 'dart:convert';
 
+import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -29,6 +30,7 @@ class SOSService {
   SOSService._();
 
   final _uuid = const Uuid();
+  final _battery = Battery();
 
   Future<String?> dispatchSOS({
     required CrashMetrics    metrics,
@@ -38,6 +40,17 @@ class SOSService {
     if (auth == null) {
       debugPrint('[SOSService] Not authenticated — cannot dispatch SOS');
       return null;
+    }
+
+    // Capture Battery Info
+    int batteryLevel = -1;
+    String batteryStatus = 'Unknown';
+    try {
+       batteryLevel = await _battery.batteryLevel;
+       final state = await _battery.batteryState;
+       batteryStatus = state.toString().split('.').last; // BatteryState.charging -> charging
+    } catch (e) {
+       debugPrint('[SOSService] Battery info failed: $e');
     }
 
     // ── 1. Get best available location ────────────────────────
@@ -87,6 +100,11 @@ class SOSService {
         location:       location,
         metrics:        metrics,
         medicalProfile: medicalProfile,
+        deviceInfo:     DeviceInfo(
+          batteryLevel:  batteryLevel,
+          batteryStatus: batteryStatus,
+          networkType:   'mobile', // TODO: use connectivity_plus
+        ),
       ),
     );
 
@@ -153,6 +171,37 @@ class SOSService {
       return response.statusCode == 200;
     } catch (e) {
       debugPrint('[SOSService] cancelSOS error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> updateStatus(String accidentId, String status) async {
+    final auth = AuthService().currentAuth;
+    if (auth == null) return false;
+
+    // Build partial RCTF payload
+    final envelope = {
+        'meta': {
+            'requestId': 'REQ-${_uuid.v4()}',
+            'timestamp': DateTime.now().toIso8601String(),
+            'env': AppConfig.env,
+        },
+        'auth': { 'userId': auth.userId, 'role': auth.role, 'token': auth.token },
+        'payload': { 'accidentId': accidentId, 'status': status },
+    };
+
+    try {
+      final response = await http.patch(
+        Uri.parse('${AppConfig.detectionServiceUrl}/api/sos/$accidentId/status'),
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ${auth.token}',
+        },
+        body: jsonEncode(envelope),
+      ).timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('[SOSService] updateStatus error: $e');
       return false;
     }
   }

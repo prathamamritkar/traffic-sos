@@ -191,18 +191,46 @@ class SOSPayload {
   final GeoPoint location;
   final CrashMetrics metrics;
   final MedicalProfile medicalProfile;
+  final DeviceInfo? deviceInfo;
 
   const SOSPayload({
     required this.location,
     required this.metrics,
     required this.medicalProfile,
+    this.deviceInfo,
   });
 
   Map<String, dynamic> toJson() => {
     'location':       location.toJson(),
     'metrics':        metrics.toJson(),
     'medicalProfile': medicalProfile.toJson(),
+    if (deviceInfo != null) 'deviceInfo': deviceInfo!.toJson(),
   };
+}
+
+// ── Device Info ───────────────────────────────────────────────
+class DeviceInfo {
+  final int batteryLevel;
+  final String batteryStatus;
+  final String networkType;
+
+  const DeviceInfo({
+    required this.batteryLevel,
+    required this.batteryStatus,
+    this.networkType = 'Unknown',
+  });
+
+  Map<String, dynamic> toJson() => {
+    'batteryLevel':  batteryLevel,
+    'batteryStatus': batteryStatus,
+    'networkType':   networkType,
+  };
+
+  factory DeviceInfo.fromJson(Map<String, dynamic> json) => DeviceInfo(
+    batteryLevel:  json['batteryLevel'] as int? ?? 0,
+    batteryStatus: json['batteryStatus'] as String? ?? 'Unknown',
+    networkType:   json['networkType'] as String? ?? 'Unknown',
+  );
 }
 
 // ── Scene Analysis Response ───────────────────────────────────

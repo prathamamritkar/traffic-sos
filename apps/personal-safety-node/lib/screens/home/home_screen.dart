@@ -6,10 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../config/app_theme.dart';
 import '../../services/crash_detection_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/rctf_models.dart';
+import '../map/safety_map_screen.dart';
+import '../history/history_screen.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,6 +51,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final detector = CrashDetectionService();
     detector.onCrashDetected = _onCrashDetected;
     detector.startMonitoring();
+
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    await Permission.location.request();
+    await Permission.notification.request();
   }
 
   void _onCrashDetected(CrashDetectionResult result) {
@@ -70,10 +82,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg1,
-      appBar: _buildAppBar(),
+      // Only show Main AppBar on Home Tab (0); others have their own Scaffolds
+      appBar: _navIndex == 0 ? _buildAppBar() : null,
       body: _buildBody(),
       bottomNavigationBar: _buildNavBar(),
     );
+  }
+
+  Widget _buildBody() {
+    switch (_navIndex) {
+      case 0: return _buildHomeContent();
+      case 1: return const SafetyMapScreen();
+      case 2: return const HistoryScreen();
+      case 3: return const SettingsScreen();
+      default: return _buildHomeContent();
+    }
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -123,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         const SizedBox(width: 4),
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {},
+          onPressed: () => Navigator.pushNamed(context, '/notifications'),
           tooltip: 'Notifications',
         ),
         IconButton(
@@ -135,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildHomeContent() {
     return CustomScrollView(
       slivers: [
         SliverPadding(
@@ -178,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       subtitle: 'Timed check-in',
                       // amber = time-sensitive / caution — correct semantic
                       color: AppColors.warnAmber,
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(context, '/safety-check'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -189,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       subtitle: 'Notify inner circle',
                       // safeGreen = "people who will help" = reassurance
                       color: AppColors.safeGreen,
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(context, '/contacts'),
                     ),
                   ),
                 ],
@@ -214,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 subtitle: 'Live accident density and safe routes',
                 color: AppColors.infoAmber, // muted amber = informational, not urgent
                 badge: 'BETA',
-                onTap: () {},
+                onTap: () => Navigator.pushNamed(context, '/safety-map'),
               ),
 
               const SizedBox(height: 24),
@@ -413,7 +436,8 @@ class _SOSButton extends StatelessWidget {
         onLongPress: onLongPress,
         child: Container(
           width: double.infinity,
-          height: 130,
+          // height removed - content driven
+          constraints: const BoxConstraints(minHeight: 120),
           decoration: BoxDecoration(
             // SOS button = maximum urgency element = uses sosRed (full chroma)
             // Flat color, NOT gradient. Research (Ware, 2004) shows that uniform
@@ -460,7 +484,7 @@ class _SOSButton extends StatelessWidget {
 
               // Content
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: Row(
                   children: [
                     const Column(

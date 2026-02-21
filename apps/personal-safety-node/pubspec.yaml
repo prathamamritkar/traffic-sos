@@ -31,6 +31,7 @@ dependencies:
   vibration: ^1.8.4
   tflite_v2: ^1.0.0
   device_info_plus: ^10.1.0
+  battery_plus: ^6.0.0
 
   # Maps & Navigation
   flutter_map: ^6.1.0

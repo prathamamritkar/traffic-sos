@@ -1,20 +1,81 @@
 import { useState, useEffect } from 'react';
-import type { CaseRecord } from '@/types/rctf';
+import type { CaseRecord, CaseStatus } from '@/types/rctf';
 import { CaseTimeline } from './CaseTimeline';
 import styles from './MedicalPanel.module.css';
 
 interface MedicalPanelProps {
     caseRecord: CaseRecord;
+    onStatusUpdate?: (id: string, newStatus: CaseStatus) => Promise<void>;
 }
 
-export function MedicalPanel({ caseRecord }: MedicalPanelProps) {
-    const { medicalProfile: mp, metrics, accidentId, status, createdAt } = caseRecord;
+export function MedicalPanel({ caseRecord, onStatusUpdate }: MedicalPanelProps) {
+    const { medicalProfile: mp, metrics, accidentId, status, createdAt, deviceInfo } = caseRecord;
+    const [processingAction, setProcessing] = useState<CaseStatus | null>(null);
+
+    const handleAction = async (newStatus: CaseStatus) => {
+        if (!onStatusUpdate || processingAction) return;
+        setProcessing(newStatus);
+        try {
+            await onStatusUpdate(accidentId, newStatus);
+        } catch {
+            // Error handling is done in parent, we just stop loading
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    const getBatteryIcon = (level: number, status: string) => {
+        if (status === 'charging') return '⚡';
+        if (level > 90) return '🔋';
+        if (level > 50) return '🔋';
+        if (level > 20) return '🪫';
+        return '🪫';
+    };
 
     return (
         <div className={styles.panel}>
             <div className={styles.header}>
                 <span className={styles.title}>Medical Profile</span>
-                <span className="badge badge-red">{accidentId}</span>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {deviceInfo && (
+                        <span className="badge badge-gray" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+                            <span>{getBatteryIcon(deviceInfo.batteryLevel, deviceInfo.batteryStatus)}</span>
+                            <span>{deviceInfo.batteryLevel}%</span>
+                        </span>
+                    )}
+                    <span className="badge badge-red">{accidentId}</span>
+                </div>
+            </div>
+
+            {/* Case Actions */}
+            <div className={styles.actions}>
+                {status === 'DETECTED' && (
+                    <button
+                        className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
+                        onClick={() => handleAction('DISPATCHED')}
+                        disabled={!!processingAction}
+                    >
+                        {processingAction === 'DISPATCHED' ? '🚀 Dispatching...' : '🚀 Dispatch Ambulance'}
+                    </button>
+                )}
+                {(status === 'DISPATCHED' || status === 'EN_ROUTE' || status === 'ARRIVED') && (
+                    <button
+                        className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
+                        onClick={() => handleAction('RESOLVED')}
+                        disabled={!!processingAction}
+                    >
+                        {processingAction === 'RESOLVED' ? '✅ Resolving...' : '✅ Mark Resolved'}
+                    </button>
+                )}
+                {(status !== 'RESOLVED' && status !== 'CANCELLED') && (
+                    <button
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                        onClick={() => handleAction('CANCELLED')}
+                        disabled={!!processingAction}
+                    >
+                        {processingAction === 'CANCELLED' ? '🚫 Cancelling...' : '🚫 Cancel'}
+                    </button>
+                )}
             </div>
 
             {/* Vital Stats */}

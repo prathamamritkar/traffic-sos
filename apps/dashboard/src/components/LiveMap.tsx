@@ -149,14 +149,18 @@ export default function LiveMap({ cases, ambulanceLocations, signals, selectedCa
         });
     }, [cases, selectedCase, onCaseSelect, ambulanceLocations]);
 
-    // Update polyline for active route
+    // Update polyline for active route (using OSRM for real road paths)
     const polylineRef = useRef<L.Polyline | null>(null);
+
     useEffect(() => {
         if (!leafletMap.current) return;
-        import('leaflet').then((L) => {
-            const map = leafletMap.current!;
+        let active = true;
 
-            // Remove old polyline
+        const updateRoute = async () => {
+            const map = leafletMap.current!;
+            const L = await import('leaflet');
+
+            // Remove old polyline if any
             if (polylineRef.current) {
                 map.removeLayer(polylineRef.current);
                 polylineRef.current = null;
@@ -164,21 +168,75 @@ export default function LiveMap({ cases, ambulanceLocations, signals, selectedCa
 
             if (selectedCase) {
                 const amb = Array.from(ambulanceLocations.values()).find(a => a.accidentId === selectedCase.accidentId);
+
                 if (amb) {
-                    const polyline = L.polyline([
-                        [amb.location.lat, amb.location.lng],
-                        [selectedCase.location.lat, selectedCase.location.lng]
-                    ], {
-                        color: '#3b82f6',
-                        weight: 4,
-                        opacity: 0.6,
-                        dashArray: '10, 10',
-                        lineCap: 'round'
-                    }).addTo(map);
-                    polylineRef.current = polyline;
+                    try {
+                        // Fetch route from OSRM (Open Source Routing Machine)
+                        // Note: OSRM uses {lng},{lat};{lng},{lat}
+                        const response = await fetch(
+                            `https://router.project-osrm.org/route/v1/driving/${amb.location.lng},${amb.location.lat};${selectedCase.location.lng},${selectedCase.location.lat}?overview=full&geometries=geojson`
+                        );
+
+                        if (!response.ok) throw new Error('Route fetch failed');
+
+                        const data = await response.json();
+
+                        if (!active) return; // Component unmounted or dependency changed
+
+                        if (data.routes && data.routes.length > 0) {
+                            const coordinates = data.routes[0].geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]); // Swap lng,lat to lat,lng
+
+                            const polyline = L.polyline(coordinates, {
+                                color: '#3b82f6',
+                                weight: 6,
+                                opacity: 0.8,
+                                dashArray: '1, 10', // Just a solid line for roads usually, or maybe dashed for "planned"
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            }).addTo(map);
+
+                            // Animate dash offset for "flow" effect
+                            polyline.setStyle({ dashArray: '10, 20' }); // Start with dashes
+
+                            // Simple animation loop for the dash offset
+                            const animateDash = () => {
+                                if (!polylineRef.current) return;
+                                // We can't easily animate strictly in loop without requestAnimationFrame and keeping track
+                                // But CSS is better for this if we can add a class.
+                                // Leaflet paths are SVG paths.
+                                if (polyline.getElement()) {
+                                    polyline.getElement()?.classList.add(styles.flowLine);
+                                }
+                            };
+                            animateDash();
+
+                            polylineRef.current = polyline;
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch route:", err);
+                        // Fallback to straight line
+                        if (!active) return;
+
+                        const polyline = L.polyline([
+                            [amb.location.lat, amb.location.lng],
+                            [selectedCase.location.lat, selectedCase.location.lng]
+                        ], {
+                            color: '#3b82f6',
+                            weight: 4,
+                            opacity: 0.5,
+                            dashArray: '10, 10'
+                        }).addTo(map);
+                        polylineRef.current = polyline;
+                    }
                 }
             }
-        });
+        };
+
+        updateRoute();
+
+        return () => {
+            active = false;
+        };
     }, [selectedCase, ambulanceLocations]);
 
     // Update ambulance markers

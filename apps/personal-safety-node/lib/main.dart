@@ -23,6 +23,11 @@ import 'screens/home/home_screen.dart';
 import 'screens/crash/crash_countdown_screen.dart';
 import 'screens/rescue/rescue_scene_guide_screen.dart';
 import 'screens/bystander/situational_intelligence_screen.dart';
+import 'screens/profile/profile_screen.dart';
+import 'screens/contacts/contacts_screen.dart';
+import 'screens/safety/safety_check_screen.dart';
+import 'screens/map/safety_map_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
 import 'services/background_detection_service.dart';
 import 'services/rctf_logger.dart';
 
@@ -89,6 +94,11 @@ class RescuEdgeApp extends StatelessWidget {
         '/auth':         (_) => const AuthScreen(),
         '/onboarding':   (_) => const OnboardingScreen(),
         '/home':         (_) => const HomeScreen(),
+        '/profile':      (_) => const ProfileScreen(),
+        '/contacts':     (_) => const ContactsScreen(),
+        '/safety-map':   (_) => const SafetyMapScreen(),
+        '/safety-check': (_) => const SafetyCheckScreen(),
+        '/notifications': (_) => const NotificationsScreen(),
         '/rescue-guide': (_) => const RescueSceneGuideScreen(),
         '/bystander':    (_) => const SituationalIntelligenceScreen(),
       },

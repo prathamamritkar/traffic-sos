@@ -8,7 +8,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
@@ -56,7 +56,7 @@
 }
 
 .section {
-    padding: 12px 16px;
+    padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border);
 }
 
@@ -196,4 +196,56 @@
 
 .streamOffline span {
     font-size: 28px;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.actionBtn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.actionBtnPrimary {
+    background: #3b82f6;
+    color: white;
+}
+
+.actionBtnPrimary:hover {
+    background: #2563eb;
+}
+
+.actionBtnSuccess {
+    background: #22c55e;
+    color: white;
+}
+
+.actionBtnSuccess:hover {
+    background: #16a34a;
+}
+
+.actionBtnDanger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.actionBtnDanger:hover {
+    background: rgba(239, 68, 68, 0.2);
 }

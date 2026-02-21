@@ -37,6 +37,13 @@ export interface SceneAnalysis {
     suggestedActions: string[];
 }
 
+
+export interface DeviceInfo {
+    batteryLevel: number;
+    batteryStatus: string;
+    networkType?: string;
+}
+
 export interface CaseRecord {
     accidentId: string;
     victimUserId: string;
@@ -45,6 +52,7 @@ export interface CaseRecord {
     status: CaseStatus;
     metrics: CrashMetrics;
     medicalProfile: MedicalProfile;
+    deviceInfo?: DeviceInfo;
     sceneAnalysis?: SceneAnalysis;
     createdAt: string;
     resolvedAt?: string;

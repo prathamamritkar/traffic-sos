@@ -11,14 +11,14 @@
 
 .legend {
     position: absolute;
-    bottom: 24px;
-    left: 16px;
+    bottom: 1.5rem;
+    left: 1rem;
     z-index: 1000;
     background: rgba(10, 14, 26, 0.9);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 10px 14px;
+    border-radius: 0.5rem;
+    padding: 0.625rem 0.875rem;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -29,7 +29,7 @@
    browser accumulating O(n) <style> nodes as markers are refreshed.
    The class name must be global (not CSS-module-scoped) because it is
    applied inside Leaflet-managed DOM outside React's render tree.       */
-:global(.leaflet-corridor-pulse) {
+.map :global(.leaflet-corridor-pulse) {
     animation: corridorPulse 1.5s ease-in-out infinite;
 }
 
@@ -45,4 +45,22 @@
         transform: scale(1.2);
         box-shadow: 0 0 22px #22c55e;
     }
+}
+
+@keyframes flow {
+    0% {
+        stroke-dashoffset: 100%;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Target interactive paths if needed in future */
+
+/* We added styles.flowLine in JS, which compiles to a hashed class. 
+   Leaflet adds it to the PATH element. */
+.flowLine {
+    animation: flow 1s linear infinite;
 }

@@ -243,6 +243,7 @@ server.listen(PORT, () => {
     mqttBridge.on('connect', () => {
         console.log('[tracking-service] MQTT connected');
         mqttBridge.subscribe('rescuedge/sos/+', { qos: 1 });
+        mqttBridge.subscribe('rescuedge/case/+/status', { qos: 1 });
         mqttBridge.subscribe('rescuedge/corridor/+/signal', { qos: 1 });
     });
 
@@ -255,10 +256,42 @@ server.listen(PORT, () => {
             const data = JSON.parse(message.toString());
 
             if (topic.startsWith('rescuedge/sos/')) {
-                const accidentId = (data.payload?.accidentId as string | undefined) ?? topic.split('/')[2];
-                if (accidentId && !rooms.has(accidentId)) {
-                    rooms.set(accidentId, new Set());
-                    console.log(`[tracking-service] Room created for ${accidentId}`);
+                // Check if this is a cancellation or a new SOS
+                if (topic.endsWith('/cancel')) {
+                    const accidentId = data.accidentId;
+                    if (accidentId) {
+                        const updateMsg = JSON.stringify({
+                            type: 'CASE_UPDATE',
+                            payload: { accidentId, status: 'CANCELLED' }
+                        });
+                        broadcastToRoom('global', updateMsg);
+                        broadcastToRoom(accidentId, updateMsg);
+                    }
+                } else {
+                    // New SOS
+                    const accidentId = (data.payload?.accidentId as string | undefined) ?? topic.split('/')[2];
+                    if (accidentId) {
+                        if (!rooms.has(accidentId)) {
+                            rooms.set(accidentId, new Set());
+                            console.log(`[tracking-service] Room created for ${accidentId}`);
+                        }
+                        // Broadcast new SOS to dashboard
+                        const sosMsg = JSON.stringify({ type: 'SOS_NEW', payload: data.payload });
+                        broadcastToRoom('global', sosMsg);
+                    }
+                }
+            }
+
+            if (topic.startsWith('rescuedge/case/')) {
+                // Status update: rescuedge/case/:id/status
+                const accidentId = data.accidentId;
+                if (accidentId) {
+                    const updateMsg = JSON.stringify({
+                        type: 'CASE_UPDATE',
+                        payload: data
+                    });
+                    broadcastToRoom('global', updateMsg);
+                    broadcastToRoom(accidentId, updateMsg);
                 }
             }
 

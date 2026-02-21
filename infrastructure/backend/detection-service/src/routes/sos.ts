@@ -47,7 +47,7 @@ const CrashMetricsSchema = z.object({
     speedBefore: z.number().min(0),
     speedAfter: z.number().min(0),
     mlConfidence: z.number().min(0).max(1),
-    crashType: z.enum(['CONFIRMED_CRASH', 'PHONE_DROP', 'POTHOLE', 'HARD_BRAKE', 'UNKNOWN']),
+    crashType: z.enum(['CONFIRMED_CRASH', 'PHONE_DROP', 'POTHOLE', 'HARD_BRAKE', 'UNKNOWN', 'MANUAL_SOS', 'SAFETY_CHECK_TIMEOUT']),
     rolloverDetected: z.boolean(),
     impactDirection: z.enum(['FRONT', 'REAR', 'LEFT', 'RIGHT', 'ROLLOVER']).optional(),
 });

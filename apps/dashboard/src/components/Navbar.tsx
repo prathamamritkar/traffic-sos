@@ -1,4 +1,5 @@
 'use client';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 
@@ -10,6 +11,24 @@ interface NavbarProps {
 
 export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
     const router = useRouter();
+    const [openDropdown, setOpenDropdown] = useState<'notifications' | 'settings' | null>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+
+    // Close on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            // Cast to Node is safe here because we're in the browser
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+                setOpenDropdown(null);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const toggle = (menu: 'notifications' | 'settings') => {
+        setOpenDropdown(openDropdown === menu ? null : menu);
+    };
 
     const logout = () => {
         try {
@@ -89,30 +108,76 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
                 </div>
 
                 {/* ── Right ────────────────────────────────── */}
-                <div className={styles.right}>
+                <div className={styles.right} ref={wrapperRef}>
                     {/* Notifications */}
-                    <button
-                        id="notifications-btn"
-                        className="btn btn-icon"
-                        aria-label="Notifications"
-                        title="Notifications"
-                    >
-                        <span className="material-icons-round" style={{ fontSize: 20 }}>
-                            notifications_none
-                        </span>
-                    </button>
+                    <div className={styles.dropdownWrapper}>
+                        <button
+                            id="notifications-btn"
+                            className={`btn btn-icon ${openDropdown === 'notifications' ? 'btn-active' : ''}`}
+                            aria-label="Notifications"
+                            title="Notifications"
+                            onClick={() => toggle('notifications')}
+                        >
+                            <span className="material-icons-round" style={{ fontSize: 20 }}>
+                                notifications_none
+                            </span>
+                        </button>
+                        {openDropdown === 'notifications' && (
+                            <div className={styles.dropdown}>
+                                <div className={styles.dropdownTitle}>Recent Alerts</div>
+                                <div className={styles.dropdownItem}>
+                                    <div className={styles.notificationIcon}>
+                                        <span className="material-icons-round" style={{ fontSize: 16 }}>warning</span>
+                                    </div>
+                                    <div className={styles.notificationText}>
+                                        <span>New Accident Detected</span>
+                                        <span className={styles.notificationTime}>2 mins ago · Baner Rd</span>
+                                    </div>
+                                </div>
+                                <div className={styles.dropdownItem}>
+                                    <div className={styles.notificationIcon} style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80' }}>
+                                        <span className="material-icons-round" style={{ fontSize: 16 }}>check_circle</span>
+                                    </div>
+                                    <div className={styles.notificationText}>
+                                        <span>Ambulance Arrived</span>
+                                        <span className={styles.notificationTime}>15 mins ago · FC Rd</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Settings */}
-                    <button
-                        id="settings-btn"
-                        className="btn btn-icon"
-                        aria-label="Settings"
-                        title="Settings"
-                    >
-                        <span className="material-icons-round" style={{ fontSize: 20 }}>
-                            settings
-                        </span>
-                    </button>
+                    <div className={styles.dropdownWrapper}>
+                        <button
+                            id="settings-btn"
+                            className={`btn btn-icon ${openDropdown === 'settings' ? 'btn-active' : ''}`}
+                            aria-label="Settings"
+                            title="Settings"
+                            onClick={() => toggle('settings')}
+                        >
+                            <span className="material-icons-round" style={{ fontSize: 20 }}>
+                                settings
+                            </span>
+                        </button>
+                        {openDropdown === 'settings' && (
+                            <div className={styles.dropdown}>
+                                <div className={styles.dropdownTitle}>System Settings</div>
+                                <div className={styles.dropdownItem} onClick={() => alert('Dark mode is enforced for command center')}>
+                                    <span className="material-icons-round" style={{ fontSize: 18 }}>dark_mode</span>
+                                    <span>Appearance: Dark</span>
+                                </div>
+                                <div className={styles.dropdownItem}>
+                                    <span className="material-icons-round" style={{ fontSize: 18 }}>notifications_active</span>
+                                    <span>Sound Alerts: On</span>
+                                </div>
+                                <div className={styles.dropdownItem}>
+                                    <span className="material-icons-round" style={{ fontSize: 18 }}>dns</span>
+                                    <span>Server: Production</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <div className={styles.separator} aria-hidden="true" />
 

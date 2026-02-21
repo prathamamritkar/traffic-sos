@@ -1,6 +1,6 @@
 .bar {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
@@ -8,18 +8,23 @@
 .stat {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 14px;
+    gap: 0.5rem;
+    padding: 0.75rem 0.875rem;
     border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 }
 
-.stat:last-child {
+.stat:nth-child(2n) {
     border-right: none;
 }
 
+.stat:nth-last-child(-n+2) {
+    border-bottom: none;
+}
+
 .dot {
-    width: 8px;
-    height: 8px;
+    width: 0.5rem;
+    height: 0.5rem;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -45,14 +50,14 @@
 }
 
 .value {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1;
 }
 
 .label {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     font-weight: 500;
     text-transform: uppercase;

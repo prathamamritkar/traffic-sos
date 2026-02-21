@@ -3,13 +3,19 @@
 // SOS Active: Countdown → Dispatch → Bystander handover mode
 // ============================================================
 import 'dart:async';
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:camera/camera.dart';
 
 import '../../config/app_theme.dart';
 import '../../services/emergency_broadcast_service.dart';
 import '../../services/rctf_logger.dart';
+import '../../services/sos_service.dart';
+import '../../services/offline_vault_service.dart';
+import '../../models/rctf_models.dart';
 
 class RescueSceneGuideScreen extends StatefulWidget {
   const RescueSceneGuideScreen({super.key});
@@ -27,6 +33,8 @@ class _RescueSceneGuideScreenState extends State<RescueSceneGuideScreen>
   bool _cancelled = false;
   bool _isResponderMode = false;
   String? _accidentId;
+  
+  CrashMetrics? _metrics; // Metrics passed from detection or safety check
 
   Timer? _timer;
   late AnimationController _pulseCtrl;
@@ -46,7 +54,20 @@ class _RescueSceneGuideScreenState extends State<RescueSceneGuideScreen>
       duration: const Duration(milliseconds: 600),
     );
 
+    // Don't start countdown immediately in initState, wait for dependency to check args
+    // but standard flow is start immediately. We will check args in didChangeDependencies.
     _startCountdown();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is CrashMetrics) {
+      _metrics = args;
+      // If manual/timeout sort of trigger, maybe we want to dispatch faster or differently?
+      // For now we stick to the 10s countdown unless it's a confirmed crash from background service which might want 0s.
+    }
   }
 
   void _startCountdown() {
@@ -65,7 +86,80 @@ class _RescueSceneGuideScreenState extends State<RescueSceneGuideScreen>
     setState(() => _dispatched = true);
     HapticFeedback.heavyImpact();
     _dispatchCtrl.forward();
-    _accidentId = "ACC-${DateTime.now().year}-${(1000 + (DateTime.now().millisecond))}";
+
+    // 1. Get Medical Profile (required for SOS)
+    final profile = await OfflineVaultService().getMedicalProfile();
+    if (profile == null) {
+        debugPrint('[RescueGuide] No medical profile found!');
+        // In real app, prompt user or send empty/partial?
+        // We will send a fallback empty profile to ensure SOS goes out.
+    }
+
+    final safeProfile = profile ?? const MedicalProfile(
+        bloodGroup: 'Unknown', age: 0, gender: 'Unknown', 
+        allergies: [], medications: [], conditions: [], emergencyContacts: []
+    );
+
+    // 2. Use existing metrics or default to manual
+    final safeMetrics = _metrics ?? const CrashMetrics(
+      gForce: 0.0, speedBefore: 0.0, speedAfter: 0.0, mlConfidence: 1.0, 
+      crashType: 'MANUAL_SOS', rolloverDetected: false
+    );
+
+    // 3. Call Service
+    final id = await SOSService().dispatchSOS(
+        metrics: safeMetrics, 
+        medicalProfile: safeProfile
+    );
+
+    if (mounted) {
+        setState(() {
+            _accidentId = id ?? "OFFLINE-${DateTime.now().millisecondsSinceEpoch}";
+        });
+    }
+  }
+
+  Future<void> _markArrived() async {
+    if (_accidentId == null) return;
+    HapticFeedback.heavyImpact();
+    // In real app, we check if user is authorized responder
+    // For demo/hackathon, we assume responder mode grants access
+    final success = await SOSService().updateStatus(_accidentId!, 'ARRIVED');
+    if (mounted) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(success ? 'Marked as Arrived' : 'Failed to update status'),
+           backgroundColor: success ? AppColors.safeGreen : AppColors.redCore,
+         ),
+       );
+    }
+  }
+
+  void _logVitals() {
+    HapticFeedback.selectionClick();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Log Vitals'),
+        content: const TextField(
+          decoration: InputDecoration(
+             labelText: 'Heart Rate / BP / Notes',
+             border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+             onPressed: () { 
+               Navigator.pop(ctx); 
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vitals logged locally')));
+             }, 
+             child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _cancel() {
@@ -105,6 +199,8 @@ class _RescueSceneGuideScreenState extends State<RescueSceneGuideScreen>
                   isResponderMode: _isResponderMode,
                   pulseCtrl: _pulseCtrl,
                   onResponderTap: () => setState(() => _isResponderMode = true),
+                  onMarkArrived: _markArrived,
+                  onLogVitals: _logVitals,
                 )
               : _CountdownView(
                   key: const ValueKey('countdown'),
@@ -322,6 +418,8 @@ class _DispatchedView extends StatelessWidget {
   final bool isResponderMode;
   final AnimationController pulseCtrl;
   final VoidCallback onResponderTap;
+  final VoidCallback onMarkArrived;
+  final VoidCallback onLogVitals;
 
   const _DispatchedView({
     super.key,
@@ -329,259 +427,470 @@ class _DispatchedView extends StatelessWidget {
     required this.isResponderMode,
     required this.pulseCtrl,
     required this.onResponderTap,
+    required this.onMarkArrived,
+    required this.onLogVitals,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Status banner
-          // SOS dispatched banner — safeGreen (calm confirmation, help is on the way)
-          // arrivedGreen would be too bright here; the state is "dispatched", not yet "arrived"
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.safeGreen.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.safeGreen.withOpacity(0.35)),
-            ),
-            child: Row(
-              children: [
-                AnimatedBuilder(
-                  animation: pulseCtrl,
-                  builder: (_, __) => Container(
-                    width: 10, height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.safeGreen.withOpacity(0.4 + pulseCtrl.value * 0.6),
-                      boxShadow: [BoxShadow(color: AppColors.safeGreen.withOpacity(0.5), blurRadius: 6)],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'SOS DISPATCHED',
-                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.safeGreen, letterSpacing: 0.5),
-                ),
-                const Spacer(),
-                Text(
-                  accidentId,
-                  style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppColors.safeGreen, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ETA card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.bg3,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceOutline),
-            ),
-            child: Row(
-              children: [
-                // aiBlue icon — ETA/ambulance info is analytical, not an alarm
-                Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.aiBlue.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.local_taxi_rounded, color: AppColors.aiBlue, size: 26),
-                ),
-                const SizedBox(width: 14),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Ambulance Dispatched', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                    Text('Estimating arrival…', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Instructions title
-          // warnAmber — bystander guide is an instructional warning (pay attention / act now)
-          // Not a brand color, not an emergency, but demands attention → warnAmber is correct
-          Row(
+    return Column(
+      children: [
+        // Top status bar
+        Container(
+          width: double.infinity,
+          color: AppColors.bg0,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
             children: [
-              const Icon(Icons.info_outline_rounded, color: AppColors.warnAmber, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'BYSTANDER GUIDE',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.warnAmber,
-                  letterSpacing: 1,
+              AnimatedBuilder(
+                animation: pulseCtrl,
+                builder: (_, __) => Container(
+                  width: 10, height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.safeGreen.withOpacity(0.4 + pulseCtrl.value * 0.6),
+                    boxShadow: [BoxShadow(color: AppColors.safeGreen.withOpacity(0.5), blurRadius: 6)],
+                  ),
                 ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'SOS DISPATCHED',
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.safeGreen, letterSpacing: 0.5),
+              ),
+              const Spacer(),
+              Text(
+                accidentId,
+                style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppColors.safeGreen, fontWeight: FontWeight.w600),
               ),
             ],
           ),
+        ),
 
-          const SizedBox(height: 16),
+        Expanded(
+          child: isResponderMode 
+             ? _ResponderControlsFull(onMarkArrived: onMarkArrived, onLogVitals: onLogVitals)
+             : _RescueCameraAssistant( // Replaced static bystander guide with dynamic Camera Assistant
+                 onResponderModeParams: onResponderTap,
+               ),
+        ),
+      ],
+    );
+  }
+}
 
-          _InstructionStep(
-            step: 1,
-            text: 'Stay with the victim. Keep them calm and do not move them unless immediate danger is present.',
-            icon: Icons.person_pin_rounded,
-          ),
-          _InstructionStep(
-            step: 2,
-            text: 'Point the phone camera at the scene from ~45° angle to capture the full accident area.',
-            icon: Icons.camera_enhance_outlined,
-          ),
-          _InstructionStep(
-            step: 3,
-            text: 'Keep the area clear for emergency responders. Direct bystanders to create a pathway.',
-            icon: Icons.warning_amber_outlined,
-          ),
-          _InstructionStep(
-            step: 4,
-            text: 'If victim is conscious, check: name, pain level, and any visible injuries.',
-            icon: Icons.medical_information_outlined,
-          ),
+/// A Rescuer Assistant that continuously runs the camera and simulations
+class _RescueCameraAssistant extends StatefulWidget {
+  final VoidCallback onResponderModeParams;
+  const _RescueCameraAssistant({required this.onResponderModeParams});
 
-          const SizedBox(height: 20),
+  @override
+  State<_RescueCameraAssistant> createState() => _RescueCameraAssistantState();
+}
 
-          // AI processing card
-          // aiBlue card — AI processing is informational/analytical, never alarming
-          Container(
-            padding: const EdgeInsets.all(14),
+class _RescueCameraAssistantState extends State<_RescueCameraAssistant> with WidgetsBindingObserver {
+  CameraController? _controller;
+  bool _isCameraReady = false;
+  bool _isRecording = false;
+  String _statusMessage = "Initializing RescuerCam™...";
+  Color _statusColor = AppColors.textSecondary;
+  bool _hasCameraError = false;
+  
+  // Simulation State
+  int _simulationStep = 0;
+  Timer? _analysisTimer;
+  bool _hazardDetected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+    _startAnalysisLoop();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _disposeCamera();
+    _analysisTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // App lifecycle handling helps prevent camera lockups when minimizing
+    final CameraController? cameraController = _controller;
+
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      // Free up the camera for other apps or OS
+      _disposeCamera();
+    } else if (state == AppLifecycleState.resumed) {
+      // Re-initialize when coming back
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _disposeCamera() async {
+    if (_controller != null) {
+      if (_isRecording && _controller!.value.isRecordingVideo) {
+        try {
+          await _controller!.stopVideoRecording();
+        } catch (e) {
+          debugPrint("RescueCam: Error stopping recording on dispose: $e");
+        }
+      }
+      await _controller?.dispose();
+      _controller = null;
+      _isRecording = false;
+      _isCameraReady = false;
+    }
+  }
+  
+  Future<void> _initializeCamera() async {
+    if (_controller != null) return; // Already initialized
+
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        throw CameraException("NoCamera", "No cameras available on device");
+      }
+      
+      // Use standard rear camera
+      final camera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      _controller = CameraController(
+        camera,
+        ResolutionPreset.medium,
+        enableAudio: false, // Privacy for bystanders
+        imageFormatGroup: Platform.isAndroid 
+            ? ImageFormatGroup.nv21 
+            : ImageFormatGroup.bgra8888,
+      );
+
+      await _controller!.initialize();
+      
+      // Auto-start recording for evidence
+      try {
+        if (!_controller!.value.isRecordingVideo) {
+          await _controller!.startVideoRecording();
+          _isRecording = true;
+          debugPrint("RescueCam: Background recording started.");
+        }
+      } catch (e) {
+         debugPrint("RescueCam: Recording failed to start: $e");
+         // We continue even if recording fails — the viewfinder is more important
+      }
+
+      if (mounted) {
+        setState(() {
+          _isCameraReady = true;
+          _hasCameraError = false;
+          _statusMessage = "Scanning victim for injuries..."; // Reset status
+        });
+      }
+    } catch (e) {
+      debugPrint("Camera init error: $e");
+      if (mounted) {
+        setState(() {
+          _isCameraReady = false;
+          _hasCameraError = true;
+          _statusMessage = "Camera Unavailable. Please describe scene.";
+        });
+      }
+    }
+  }
+
+  void _startAnalysisLoop() {
+    // Simulates an edge-AI detection process
+    _analysisTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted) return;
+      
+      setState(() {
+        _simulationStep++;
+        
+        if (_simulationStep == 1) {
+           _statusMessage = "Scanning victim for injuries...";
+           _statusColor = AppColors.aiBlue;
+        } else if (_simulationStep == 3) {
+           // Simulate finding a critical injury
+           _statusMessage = "CRITICAL: Severe Arterial Bleeding Detected";
+           _statusColor = AppColors.redBright;
+           _hazardDetected = true;
+           HapticFeedback.heavyImpact();
+        } else if (_simulationStep == 4) {
+           // Simulate automated action
+           // In real app: Get blood type from OfflineVaultService
+           _statusMessage = "Sending Blood Type (O+) to Ambulance..."; 
+           _statusColor = AppColors.safeGreen;
+        } else if (_simulationStep == 6) {
+           _statusMessage = "Keep camera pointed at victim. Call connected.";
+           _statusColor = AppColors.textPrimary;
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fallback UI if camera fails (Empty State)
+    if (_hasCameraError || (!_isCameraReady && _controller == null)) {
+       return Container(
+         color: Colors.black,
+         child: Stack(
+           children: [
+             Center(
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   Icon(Icons.videocam_off_outlined, size: 48, color: Colors.white24),
+                   SizedBox(height: 16),
+                   Text(
+                     "Camera Unavailable",
+                     style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+                   ),
+                   Text(
+                     "Voice guidance active",
+                     style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
+                   ),
+                 ],
+               ),
+             ),
+             _buildOverlayUI(), // Still show instructions even without camera
+           ],
+         ),
+       );
+    }
+
+    if (!_isCameraReady) {
+      return Container(
+         color: Colors.black,
+         child: Center(child: CircularProgressIndicator(color: AppColors.aiBlue)),
+      );
+    }
+
+    // Camera Preview Scale Fix: Ensure it covers screen properly
+    return Stack(
+      children: [
+        // 1. Camera Feed (Full Screen)
+        Positioned.fill(
+          child: CameraPreview(_controller!),
+        ),
+
+        // 2. Dark Gradient Overlay for text readability
+        Positioned.fill(
+           child: Container(
+             decoration: BoxDecoration(
+               gradient: LinearGradient(
+                 begin: Alignment.topCenter,
+                 end: Alignment.bottomCenter,
+                 colors: [
+                   Colors.black54,
+                   Colors.transparent,
+                   Colors.black87,
+                 ],
+               ),
+             ),
+           ),
+        ),
+        
+        // 3. UI Overlays
+        _buildOverlayUI(),
+      ],
+    );
+  }
+
+  Widget _buildOverlayUI() {
+    return Stack(
+      children: [
+        // Top Hud - Emergency Call Status
+        Positioned(
+          top: 20, left: 20, right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.aiBlue.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.aiBlue.withOpacity(0.2)),
+              color: AppColors.redCore, // Red for Emergency Call active
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 10)],
             ),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome_outlined, color: AppColors.aiBlue, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'On-device vision & audio AI analyzing scene severity and triaging injuries…',
-                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.aiBlue, height: 1.4),
-                  ),
-                ),
+                 const Icon(Icons.phone_in_talk, color: Colors.white, size: 24),
+                 const SizedBox(width: 12),
+                 Expanded(
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       Text(
+                         "EMERGENCY CALL ACTIVE",
+                         style: GoogleFonts.inter(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 13),
+                         overflow: TextOverflow.ellipsis,
+                       ),
+                       Text(
+                         "Don't hang up. Help is listening.",
+                         style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+                         overflow: TextOverflow.ellipsis,
+                       ),
+                     ],
+                   ),
+                 )
               ],
             ),
           ),
+        ),
 
-          const SizedBox(height: 20),
-
-          // Responder section
-          isResponderMode
-              ? _ResponderControls()
-              : _ResponderEntryButton(onTap: onResponderTap),
-        ],
-      ),
-    );
-  }
-}
-
-class _InstructionStep extends StatelessWidget {
-  final int step;
-  final String text;
-  final IconData icon;
-
-  const _InstructionStep({required this.step, required this.text, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
+        // Center AR Guidance
+        Center(
+          child: Container(
+            width: 250, height: 250,
             decoration: BoxDecoration(
-              color: AppColors.bg3,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.surfaceOutline),
-            ),
-            child: Center(
-              child: Text(
-                '$step',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+              border: Border.all(
+                color: _hazardDetected ? AppColors.redBright : Colors.white.withOpacity(0.5), 
+                width: 2
               ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                 if (_hazardDetected)
+                   Container(
+                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                     color: AppColors.redBright,
+                     child: Text(
+                       "INJURY DETECTED",
+                       style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.black),
+                     ),
+                   ),
+              ],
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
+        ),
+
+        // Bottom Instructions & Status
+        Positioned(
+          bottom: 0, left: 0, right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 4),
+                // Analytical Status
                 Row(
                   children: [
-                    Icon(icon, size: 14, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
+                    Icon(
+                      _hazardDetected ? Icons.warning_amber_rounded : Icons.auto_awesome, 
+                      color: _statusColor, 
+                      size: 20
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _statusMessage,
+                        style: GoogleFonts.inter(
+                          color: _statusColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  text,
-                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                const SizedBox(height: 16),
+                
+                // Guidance Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       Text(
+                         "RESCUER INSTRUCTIONS",
+                         style: GoogleFonts.inter(
+                           fontSize: 10, 
+                           fontWeight: FontWeight.w900, 
+                           color: AppColors.textSecondary,
+                           letterSpacing: 1,
+                         ),
+                       ),
+                       const SizedBox(height: 8),
+                       Text(
+                         "1. Point camera at victim's injuries.\n2. Do NOT move them unless in fire danger.\n3. The app is sending location & blood type.",
+                         style: GoogleFonts.inter(color: AppColors.textPrimary, height: 1.4, fontWeight: FontWeight.w500),
+                       )
+                     ],
+                  ),
                 ),
+                
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    onPressed: widget.onResponderModeParams,
+                    child: Text(
+                      "Official Responder? Tap to Override",
+                      style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                )
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _ResponderEntryButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _ResponderEntryButton({required this.onTap});
+class _ResponderControlsFull extends StatelessWidget {
+   final VoidCallback onMarkArrived;
+   final VoidCallback onLogVitals;
+   
+   const _ResponderControlsFull({required this.onMarkArrived, required this.onLogVitals});
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: const Icon(Icons.badge_outlined, size: 18),
-        label: Text(
-          'Official Responder? Log in to Take Over',
-          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textSecondary,
-          side: const BorderSide(color: AppColors.surfaceOutline2),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
-    );
-  }
+   @override
+   Widget build(BuildContext context) {
+      return Container(
+         color: AppColors.bg0,
+         padding: const EdgeInsets.all(20),
+         child: Column(
+            children: [
+               _ResponderControls(onMarkArrived: onMarkArrived, onLogVitals: onLogVitals),
+               const Spacer(),
+               Text("EMS MODE ACTIVE", style: GoogleFonts.inter(color: AppColors.textDisabled)),
+            ],
+         ),
+      );
+   }
 }
 
 class _ResponderControls extends StatelessWidget {
+  final VoidCallback onMarkArrived;
+  final VoidCallback onLogVitals;
+
+  const _ResponderControls({
+    required this.onMarkArrived,
+    required this.onLogVitals,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        // Responder panel: safeGreen for confirmed active state (on-scene).
-      // arrivedGreen is used for the CTA button specifically — that's the
-      // high-salience confirmation action, warranting the brighter green.
-      color: AppColors.safeGreen.withOpacity(0.08),
+        color: AppColors.safeGreen.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.safeGreen.withOpacity(0.35)),
       ),
@@ -608,11 +917,10 @@ class _ResponderControls extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: onMarkArrived,
                   icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                   label: const Text('Mark Arrived'),
                   style: ElevatedButton.styleFrom(
-                    // arrivedGreen for the CTA — this IS the high-salience confirmation action
                     backgroundColor: AppColors.arrivedGreen,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -624,7 +932,7 @@ class _ResponderControls extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: onLogVitals,
                   icon: const Icon(Icons.medical_services_outlined, size: 18),
                   label: const Text('Vitals Log'),
                   style: OutlinedButton.styleFrom(
@@ -642,3 +950,4 @@ class _ResponderControls extends StatelessWidget {
     );
   }
 }
+

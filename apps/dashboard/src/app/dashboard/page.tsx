@@ -8,7 +8,7 @@ import { SOSFeed } from '@/components/SOSFeed';
 import { MedicalPanel } from '@/components/MedicalPanel';
 import { SignalGrid } from '@/components/SignalGrid';
 import { useLiveData } from '@/hooks/useLiveData';
-import type { CaseRecord, TrafficSignalPayload } from '@/types/rctf';
+import type { CaseRecord, TrafficSignalPayload, CaseStatus } from '@/types/rctf';
 import styles from './dashboard.module.css';
 
 // Dynamically import LiveMap — Leaflet requires window (not available on server)
@@ -119,6 +119,38 @@ export default function DashboardPage() {
         return () => clearInterval(interval);
     }, []);
 
+    // ── Handle Status Update ────────────────────────────────────
+    const handleStatusUpdate = async (id: string, newStatus: CaseStatus): Promise<void> => {
+        try {
+            const token = localStorage.getItem('rescuedge_token');
+            const baseUrl = process.env.NEXT_PUBLIC_DETECTION_API_URL ?? 'http://localhost:3001';
+
+            const res = await fetch(`${baseUrl}/api/sos/${id}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            // Optimistically update local state for immediate feedback
+            // (Data will be re-synced by WS/polling momentarily)
+            /* 
+            setCases((prev) => prev.map(c => 
+                c.accidentId === id ? { ...c, status: newStatus } : c
+            ));
+            */
+            // Actually, wait for WS/poll is safer to avoid desync, but for UI feedback we rely on Promise resolution.
+        } catch (err) {
+            console.error('Failed to update status:', err);
+            alert('Failed to update case status. Please try again.');
+            throw err; // Propagate error so UI can reset loading state
+        }
+    };
+
     // ── Don't render until auth resolves ────────────────────────
     if (!user) return null;
 
@@ -160,7 +192,10 @@ export default function DashboardPage() {
                 <aside className={styles.details}>
                     {selectedCase ? (
                         <>
-                            <MedicalPanel caseRecord={selectedCase} />
+                            <MedicalPanel
+                                caseRecord={selectedCase}
+                                onStatusUpdate={handleStatusUpdate}
+                            />
                             <SignalGrid signals={signals} />
                         </>
                     ) : (
@@ -174,6 +209,6 @@ export default function DashboardPage() {
                     )}
                 </aside>
             </div>
-        </div>
+        </div >
     );
 }
