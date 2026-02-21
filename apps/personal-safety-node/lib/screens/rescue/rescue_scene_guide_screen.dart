@@ -4,15 +4,12 @@
 // ============================================================
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
 
 import '../../config/app_theme.dart';
-import '../../services/emergency_broadcast_service.dart';
-import '../../services/rctf_logger.dart';
 import '../../services/sos_service.dart';
 import '../../services/offline_vault_service.dart';
 import '../../models/rctf_models.dart';
@@ -650,8 +647,8 @@ class _RescueCameraAssistantState extends State<_RescueCameraAssistant> with Wid
                child: Column(
                  mainAxisAlignment: MainAxisAlignment.center,
                  children: [
-                   Icon(Icons.videocam_off_outlined, size: 48, color: Colors.white24),
-                   SizedBox(height: 16),
+                   const Icon(Icons.videocam_off_outlined, size: 48, color: Colors.white24),
+                   const SizedBox(height: 16),
                    Text(
                      "Camera Unavailable",
                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
@@ -672,7 +669,7 @@ class _RescueCameraAssistantState extends State<_RescueCameraAssistant> with Wid
     if (!_isCameraReady) {
       return Container(
          color: Colors.black,
-         child: Center(child: CircularProgressIndicator(color: AppColors.aiBlue)),
+         child: const Center(child: CircularProgressIndicator(color: AppColors.aiBlue)),
       );
     }
 
@@ -687,7 +684,7 @@ class _RescueCameraAssistantState extends State<_RescueCameraAssistant> with Wid
         // 2. Dark Gradient Overlay for text readability
         Positioned.fill(
            child: Container(
-             decoration: BoxDecoration(
+             decoration: const BoxDecoration(
                gradient: LinearGradient(
                  begin: Alignment.topCenter,
                  end: Alignment.bottomCenter,

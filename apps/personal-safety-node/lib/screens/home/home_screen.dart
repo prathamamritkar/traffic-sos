@@ -7,11 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:permission_handler/permission_handler.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../config/app_theme.dart';
 import '../../services/crash_detection_service.dart';
-import '../../services/auth_service.dart';
-import '../../models/rctf_models.dart';
 import '../map/safety_map_screen.dart';
 import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
@@ -129,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: [
-                PulseDot(color: AppColors.safeGreen, size: 6),
+                const PulseDot(color: AppColors.safeGreen, size: 6),
                 const SizedBox(width: 5),
                 Text(
                   'LIVE',
@@ -189,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 24),
 
               // ── Section: Features ────────────────────────
-              SectionHeader(title: 'Safety Features'),
+              const SectionHeader(title: 'Safety Features'),
               const SizedBox(height: 12),
 
                Row(
@@ -243,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 24),
 
               // ── Section: System Status ──────────────────────
-              SectionHeader(title: 'System Status'),
+              const SectionHeader(title: 'System Status'),
               const SizedBox(height: 12),
 
               _QuickStats(),
@@ -697,7 +694,7 @@ class _FeatureCardWide extends StatelessWidget {
 class _QuickStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
         Expanded(
           child: _StatTile(
@@ -708,7 +705,7 @@ class _QuickStats extends StatelessWidget {
             iconColor: AppColors.aiBlue,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: _StatTile(
             label: 'Speed',
@@ -718,7 +715,7 @@ class _QuickStats extends StatelessWidget {
             iconColor: AppColors.warnAmber,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: _StatTile(
             label: 'Status',
@@ -913,7 +910,7 @@ class _DemoCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.science_outlined, color: AppColors.infoAmber, size: 20),
+          const Icon(Icons.science_outlined, color: AppColors.infoAmber, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

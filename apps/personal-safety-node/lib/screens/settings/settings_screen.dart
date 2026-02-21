@@ -23,7 +23,7 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _SectionHeader(title: 'Account'),
+          const _SectionHeader(title: 'Account'),
           _SettingsTile(
             icon: Icons.person_outline_rounded,
             title: 'Medical Profile',
@@ -38,7 +38,7 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
-          _SectionHeader(title: 'System'),
+          const _SectionHeader(title: 'System'),
           _SettingsTile(
             icon: Icons.notifications_outlined,
             title: 'Notifications',
@@ -54,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           
           const SizedBox(height: 24),
-          _SectionHeader(title: 'Data & Privacy'),
+          const _SectionHeader(title: 'Data & Privacy'),
           _SettingsTile(
             icon: Icons.security_rounded,
             title: 'Offline Vault',
@@ -188,7 +188,7 @@ class _SettingsSwitch extends StatelessWidget {
         subtitle: Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );

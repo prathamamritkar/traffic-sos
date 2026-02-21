@@ -89,6 +89,8 @@ class AppColors {
 
   // ── Semantic convenience aliases ─────────────────────────
   // These make call-sites express intent, not hex values
+  static const primary     = brandRed;
+  static const onPrimary   = white;
   static const sosRed      = redHot;       // active SOS only
   static const crashRed    = redBright;    // crash countdown
   static const brandRed    = redCore;      // calm-state brand CTA
@@ -194,7 +196,7 @@ ThemeData buildAppTheme() {
     ),
 
     // ── Cards ─────────────────────────────────────────────────
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.bg2,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
@@ -347,7 +349,7 @@ ThemeData buildAppTheme() {
     ),
 
     // ── Dialog ────────────────────────────────────────────────
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: AppColors.bg2,
       surfaceTintColor: Colors.transparent,
       elevation: 0,

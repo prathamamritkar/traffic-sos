@@ -173,7 +173,10 @@ export default function DashboardPage() {
                     <SOSFeed
                         cases={cases}
                         selectedId={selectedCase?.accidentId}
-                        onSelect={setSelected}
+                        onSelect={(c) => {
+                            console.log('[dashboard] Selecting case via feed:', c.accidentId);
+                            setSelected(c);
+                        }}
                     />
                 </aside>
 
@@ -184,7 +187,10 @@ export default function DashboardPage() {
                         ambulanceLocations={ambulanceLocations}
                         signals={signals}
                         selectedCase={selectedCase}
-                        onCaseSelect={setSelected}
+                        onCaseSelect={(c) => {
+                            console.log('[dashboard] Selecting case via map:', c.accidentId);
+                            setSelected(c);
+                        }}
                     />
                 </main>
 

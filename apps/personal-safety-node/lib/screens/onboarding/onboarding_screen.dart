@@ -33,7 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   String _bloodGroup  = 'O+';
   String _gender      = 'Other';
   int _age            = 25;
-  List<String> _allergies = [];
+  final List<String> _allergies = [];
 
   static const _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   static const _genders     = ['Male', 'Female', 'Other'];

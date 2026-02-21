@@ -78,6 +78,18 @@ const SOSBodySchema = z.object({
         location: GeoPointSchema,
         metrics: CrashMetricsSchema,
         medicalProfile: MedicalProfileSchema,
+        deviceInfo: z.object({
+            batteryLevel: z.number(),
+            batteryStatus: z.string(),
+            networkType: z.string().optional(),
+        }).optional(),
+        sceneAnalysis: z.object({
+            injurySeverity: z.enum(['CRITICAL', 'MODERATE', 'MINOR', 'UNKNOWN']),
+            victimCount: z.number(),
+            visibleHazards: z.array(z.string()),
+            urgencyLevel: z.enum(['IMMEDIATE', 'HIGH', 'NORMAL']),
+            suggestedActions: z.array(z.string()),
+        }).optional(),
     }),
 });
 
@@ -117,7 +129,7 @@ sosRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
     const { payload, auth, meta } = parsed.data;
 
     // 2. Multi-stage crash validation
-    const validationResult = validateCrash(payload.metrics);
+    const validationResult = validateCrash(payload.metrics as any);
     if (!validationResult.valid) {
         res.status(422).json({
             error: 'Crash validation failed',
@@ -134,10 +146,12 @@ sosRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
     const caseRecord: CaseRecord = {
         accidentId,
         victimUserId: auth.userId,
-        location: payload.location,
+        location: payload.location as any,
         status: 'DETECTED',
-        metrics: payload.metrics,
-        medicalProfile: payload.medicalProfile,
+        metrics: payload.metrics as any,
+        medicalProfile: payload.medicalProfile as any,
+        deviceInfo: payload.deviceInfo as any,
+        sceneAnalysis: payload.sceneAnalysis as any,
         createdAt: new Date().toISOString(),
     };
 
@@ -147,9 +161,9 @@ sosRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
     // 6. Build RCTF SOS payload
     const sosPayload: SOSPayload = {
         accidentId,
-        location: payload.location,
-        metrics: payload.metrics,
-        medicalProfile: payload.medicalProfile,
+        location: payload.location as any,
+        metrics: payload.metrics as any,
+        medicalProfile: payload.medicalProfile as any,
         victimUserId: auth.userId,
         status: 'DETECTED',
         createdAt: new Date().toISOString(),

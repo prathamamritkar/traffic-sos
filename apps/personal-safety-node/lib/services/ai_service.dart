@@ -102,7 +102,7 @@ class IntelligenceService {
       String jsonString;
       if (text.contains('```json')) {
         final parts = text.split('```json');
-        if (parts.length < 2) throw FormatException('Unexpected fencing');
+        if (parts.length < 2) throw const FormatException('Unexpected fencing');
         jsonString = parts[1].split('```').first.trim();
       } else if (text.contains('```')) {
         final parts = text.split('```');

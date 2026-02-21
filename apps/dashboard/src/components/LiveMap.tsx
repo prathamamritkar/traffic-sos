@@ -150,7 +150,8 @@ export default function LiveMap({ cases, ambulanceLocations, signals, selectedCa
     }, [cases, selectedCase, onCaseSelect, ambulanceLocations]);
 
     // Update polyline for active route (using OSRM for real road paths)
-    const polylineRef = useRef<L.Polyline | null>(null);
+    const polylineRef = useRef<L.Polyline[]>([]);
+    const lastCalculatedAt = useRef<{ lat: number; lng: number } | null>(null);
 
     useEffect(() => {
         if (!leafletMap.current) return;
@@ -160,75 +161,89 @@ export default function LiveMap({ cases, ambulanceLocations, signals, selectedCa
             const map = leafletMap.current!;
             const L = await import('leaflet');
 
-            // Remove old polyline if any
-            if (polylineRef.current) {
-                map.removeLayer(polylineRef.current);
-                polylineRef.current = null;
-            }
-
             if (selectedCase) {
                 const amb = Array.from(ambulanceLocations.values()).find(a => a.accidentId === selectedCase.accidentId);
 
                 if (amb) {
+                    // Accuracy Optimization: Distance check
+                    // Don't re-calculate if the ambulance has moved less than 50 meters
+                    if (lastCalculatedAt.current) {
+                        const dLat = amb.location.lat - lastCalculatedAt.current.lat;
+                        const dLng = amb.location.lng - lastCalculatedAt.current.lng;
+                        const distSq = (dLat * dLat) + (dLng * dLng); // Rough square distance (enough for threshold)
+                        // approx 0.0005 deg ~= 50m
+                        if (distSq < 0.00000025) return;
+                    }
+
                     try {
-                        // Fetch route from OSRM (Open Source Routing Machine)
-                        // Note: OSRM uses {lng},{lat};{lng},{lat}
+                        // Fetch route from OSRM
+                        // We add radiuses to snap accurately to the nearest road
                         const response = await fetch(
-                            `https://router.project-osrm.org/route/v1/driving/${amb.location.lng},${amb.location.lat};${selectedCase.location.lng},${selectedCase.location.lat}?overview=full&geometries=geojson`
+                            `https://router.project-osrm.org/route/v1/driving/${amb.location.lng},${amb.location.lat};${selectedCase.location.lng},${selectedCase.location.lat}?overview=full&geometries=geojson&snapping=any&continue_straight=true`
                         );
 
                         if (!response.ok) throw new Error('Route fetch failed');
-
                         const data = await response.json();
 
-                        if (!active) return; // Component unmounted or dependency changed
+                        if (!active) return;
 
                         if (data.routes && data.routes.length > 0) {
-                            const coordinates = data.routes[0].geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]); // Swap lng,lat to lat,lng
+                            const coordinates = data.routes[0].geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]);
 
-                            const polyline = L.polyline(coordinates, {
+                            // Store location to avoid jitter
+                            lastCalculatedAt.current = { lat: amb.location.lat, lng: amb.location.lng };
+
+                            // Clear old polylines
+                            polylineRef.current.forEach(p => map.removeLayer(p));
+                            polylineRef.current = [];
+
+                            // 1. Bottom "Glow" line
+                            const glowLine = L.polyline(coordinates, {
                                 color: '#3b82f6',
-                                weight: 6,
-                                opacity: 0.8,
-                                dashArray: '1, 10', // Just a solid line for roads usually, or maybe dashed for "planned"
+                                weight: 10,
+                                opacity: 0.3,
                                 lineCap: 'round',
                                 lineJoin: 'round'
                             }).addTo(map);
 
-                            // Animate dash offset for "flow" effect
-                            polyline.setStyle({ dashArray: '10, 20' }); // Start with dashes
+                            // 2. Top "Active" line with flow animation
+                            const activeLine = L.polyline(coordinates, {
+                                color: '#93c5fd',
+                                weight: 4,
+                                opacity: 0.9,
+                                dashArray: '10, 20',
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            }).addTo(map);
 
-                            // Simple animation loop for the dash offset
-                            const animateDash = () => {
-                                if (!polylineRef.current) return;
-                                // We can't easily animate strictly in loop without requestAnimationFrame and keeping track
-                                // But CSS is better for this if we can add a class.
-                                // Leaflet paths are SVG paths.
-                                if (polyline.getElement()) {
-                                    polyline.getElement()?.classList.add(styles.flowLine);
-                                }
-                            };
-                            animateDash();
+                            const el = activeLine.getElement();
+                            if (el) el.classList.add(styles.flowLine);
 
-                            polylineRef.current = polyline;
+                            polylineRef.current = [glowLine, activeLine];
                         }
                     } catch (err) {
                         console.error("Failed to fetch route:", err);
-                        // Fallback to straight line
                         if (!active) return;
-
-                        const polyline = L.polyline([
-                            [amb.location.lat, amb.location.lng],
-                            [selectedCase.location.lat, selectedCase.location.lng]
-                        ], {
-                            color: '#3b82f6',
-                            weight: 4,
-                            opacity: 0.5,
-                            dashArray: '10, 10'
-                        }).addTo(map);
-                        polylineRef.current = polyline;
+                        // Fallback logic — only if we don't have a route yet
+                        if (polylineRef.current.length === 0) {
+                            const fallback = L.polyline([
+                                [amb.location.lat, amb.location.lng],
+                                [selectedCase.location.lat, selectedCase.location.lng]
+                            ], { color: '#3b82f6', weight: 3, opacity: 0.4, dashArray: '5, 10' }).addTo(map);
+                            polylineRef.current = [fallback];
+                        }
                     }
+                } else {
+                    // No ambulance — clear route and reset cache
+                    polylineRef.current.forEach(p => map.removeLayer(p));
+                    polylineRef.current = [];
+                    lastCalculatedAt.current = null;
                 }
+            } else {
+                // No selected case — clear route and reset cache
+                polylineRef.current.forEach(p => map.removeLayer(p));
+                polylineRef.current = [];
+                lastCalculatedAt.current = null;
             }
         };
 

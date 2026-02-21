@@ -9,12 +9,10 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../config/app_theme.dart';
-import '../../models/rctf_models.dart';
 import '../../services/ai_service.dart';
 import '../../services/emergency_broadcast_service.dart';
 
@@ -164,9 +162,9 @@ class _SituationalIntelligenceScreenState
           'Situational Intelligence',
           style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700),
         ),
-        actions: [
+        actions: const [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             child: AppBadge(label: 'AI-POWERED', color: AppColors.aiBlue),
           ),
         ],

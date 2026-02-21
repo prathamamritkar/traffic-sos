@@ -149,7 +149,7 @@ class _CrashCountdownScreenState extends State<CrashCountdownScreen>
                     ),
                   ],
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.warning_amber_rounded,
                   color: AppColors.redBright,
                   size: 44,

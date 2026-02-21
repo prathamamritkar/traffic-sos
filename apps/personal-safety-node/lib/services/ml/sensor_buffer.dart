@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:typed_data';
-import 'package:sensors_plus/sensors_plus.dart';
 
 class SensorBuffer {
   final int capacity;

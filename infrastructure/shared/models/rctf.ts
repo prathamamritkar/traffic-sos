@@ -116,28 +116,20 @@ export interface TrafficSignalPayload {
     corridor: boolean;
 }
 
-// ── Scene Analysis (Bystander AI) ─────────────────────────────
-export interface SceneAnalysisPayload {
-    accidentId?: string;
-    location?: GeoPoint;
-    injurySeverity: UrgencyLevel;
+// ── Scene Analysis (Bystander Vision AI) ──────────────────────────
+export interface SceneAnalysis {
+    injurySeverity: 'CRITICAL' | 'MODERATE' | 'MINOR' | 'UNKNOWN';
     victimCount: number;
-    hazards: string[];
-    recommendedServices: ('AMBULANCE' | 'FIRE' | 'POLICE')[];
-    urgency: UrgencyLevel;
+    visibleHazards: string[];
+    urgencyLevel: 'IMMEDIATE' | 'HIGH' | 'NORMAL';
     suggestedActions: string[];
-    confidence: number;
-    rawDescription: string;
 }
 
-// ── Notification ──────────────────────────────────────────────
-export interface NotificationPayload {
-    notificationId: string;
-    type: 'SOS_ALERT' | 'CASE_UPDATE' | 'SIGNAL_CHANGE' | 'SYSTEM';
-    title: string;
-    body: string;
-    accidentId?: string;
-    data?: Record<string, string>;
+// ── Device Info ───────────────────────────────────────────────
+export interface DeviceInfo {
+    batteryLevel: number;
+    batteryStatus: string;
+    networkType?: string;
 }
 
 // ── Case History ──────────────────────────────────────────────
@@ -149,6 +141,8 @@ export interface CaseRecord {
     status: CaseStatus;
     metrics: CrashMetrics;
     medicalProfile: MedicalProfile;
+    deviceInfo?: DeviceInfo;
+    sceneAnalysis?: SceneAnalysis;
     createdAt: string;
     resolvedAt?: string;
     notes?: string;

@@ -3,11 +3,9 @@
 // ============================================================
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/app_theme.dart';
-import '../../services/sos_service.dart';
 import '../../services/offline_vault_service.dart';
 import '../../models/rctf_models.dart';
 
@@ -78,7 +76,7 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen> with TickerProvid
 
     // 2. Create Safety Check Payload
     // using "manual" logic but initiated by timer
-    final metrics = const CrashMetrics(
+    const metrics = CrashMetrics(
       gForce: 0.0,
       speedBefore: 0.0,
       speedAfter: 0.0,
@@ -158,7 +156,7 @@ class _SafetyCheckScreenState extends State<SafetyCheckScreen> with TickerProvid
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          _active ? _formatTime(_remainingSeconds) : '${_durationMinutes} min',
+                          _active ? _formatTime(_remainingSeconds) : '$_durationMinutes min',
                           style: GoogleFonts.inter(
                             fontSize: 48,
                             fontWeight: FontWeight.w700,

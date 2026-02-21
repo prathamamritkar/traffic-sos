@@ -177,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text('Gender', style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _genders.contains(_gender) ? _gender : 'Other',
+                initialValue: _genders.contains(_gender) ? _gender : 'Other',
                 items: _genders.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                 onChanged: (v) => setState(() => _gender = v!),
                 dropdownColor: AppColors.bg3,

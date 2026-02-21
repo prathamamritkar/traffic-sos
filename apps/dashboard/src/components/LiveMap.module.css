@@ -48,12 +48,8 @@
 }
 
 @keyframes flow {
-    0% {
-        stroke-dashoffset: 100%;
-    }
-
-    100% {
-        stroke-dashoffset: 0;
+    to {
+        stroke-dashoffset: -30;
     }
 }
 
@@ -63,4 +59,5 @@
    Leaflet adds it to the PATH element. */
 .flowLine {
     animation: flow 1s linear infinite;
+    filter: drop-shadow(0 0 3px #3b82f6);
 }

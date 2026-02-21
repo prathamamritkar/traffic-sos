@@ -167,7 +167,7 @@ class _AuthScreenState extends State<AuthScreen>
                         SizedBox(height: size.height * 0.08),
 
                         // Feature pills
-                        Wrap(
+                        const Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [

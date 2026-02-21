@@ -5,10 +5,9 @@
 //    — the init code block was not inside any method, causing a parse error.
 // ============================================================
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'crash_engine.dart';
@@ -51,7 +50,6 @@ class BackgroundDetectionService {
         autoStart:                     true,
         isForegroundMode:              true,
         notificationChannelId:         _channelId,
-        notificationChannelName:       _channelName,
         initialNotificationTitle:      'RescuEdge Protection Active',
         initialNotificationContent:    'Monitoring for crashes in background',
         foregroundServiceNotificationId: _notifId,

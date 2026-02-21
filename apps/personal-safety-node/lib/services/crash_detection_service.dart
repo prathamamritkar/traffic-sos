@@ -94,6 +94,10 @@ class CrashDetectionService {
     _engineSub?.cancel();
     _engineSub = null;
   }
+
+  void simulateCrash() {
+    _handleCrashEvent(25.0); // Simulate high G-force
+  }
   
   void dispose() {
     stopMonitoring();

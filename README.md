@@ -3,6 +3,8 @@
 
 > **The ultimate safety companion** that transforms the victim's smartphone into an active emergency broadcast node. Featuring Google Personal Safety parity, offline-first vaulting, and an intelligent "Handover Mode" for bystanders.
 
+**[Read the Comprehensive Project Overview & Strategy](./Project_Overview_and_Strategy.md)**
+
 ---
 
 ## 🏗️ Unified Architecture

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/app_theme.dart';
 import '../../services/offline_vault_service.dart';
-import '../../models/rctf_models.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -127,7 +126,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   color: AppColors.bg2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16), 
-                    side: BorderSide(color: AppColors.surfaceOutline),
+                    side: const BorderSide(color: AppColors.surfaceOutline),
                   ),
                   child: ListTile(
                     leading: Container(

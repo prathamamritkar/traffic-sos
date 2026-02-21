@@ -18,20 +18,20 @@ dependencies:
 
   # Auth
   google_sign_in: ^6.2.1
-  firebase_auth: ^4.17.8
-  firebase_core: ^2.27.1
-  firebase_messaging: ^14.7.19
+  firebase_auth: ^5.1.1
+  firebase_core: ^3.2.0
+  firebase_messaging: ^15.0.3
 
   # Sensors & Location
-  sensors_plus: ^5.0.1
+  sensors_plus: ^7.0.0
   geolocator: ^11.0.0
   permission_handler: ^11.3.0
   flutter_background_service: ^5.0.7
   flutter_local_notifications: ^17.0.0
-  vibration: ^1.8.4
+  vibration: ^3.1.7
   tflite_v2: ^1.0.0
-  device_info_plus: ^10.1.0
-  battery_plus: ^6.0.0
+  device_info_plus: ^12.3.0
+  battery_plus: ^7.0.0
 
   # Maps & Navigation
   flutter_map: ^6.1.0
@@ -52,7 +52,7 @@ dependencies:
 
   # Audio & Video Recording
   camera: ^0.11.0+2
-  record: ^5.1.0
+  record: ^6.1.1
   path: ^1.9.0
   audioplayers: ^6.0.0
 
