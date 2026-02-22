@@ -1,7 +1,7 @@
 import mqtt, { MqttClient } from 'mqtt';
 
 const BROKER_URL = process.env.MQTT_BROKER_URL ?? 'mqtt://broker.hivemq.com:1883';
-const CLIENT_ID = `rescuedge-corridor-${Math.random().toString(16).slice(2, 8)}`;
+const CLIENT_ID = `rapidrescue-corridor-${Math.random().toString(16).slice(2, 8)}`;
 
 let client: MqttClient;
 

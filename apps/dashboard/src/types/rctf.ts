@@ -66,6 +66,8 @@ export interface TrafficSignalPayload {
     duration: number;
     accidentId?: string;
     corridor: boolean;
+    /** Ordering index for corridor path sequencing (0 = start of corridor) */
+    corridorOrder?: number;
 }
 
 export interface AmbulanceLocation {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-    title: 'RescuEdge Dashboard — ADGC Command Center',
+    title: 'RapidRescue Dashboard — ADGC Command Center',
     description: 'Real-time accident detection, Green Corridor orchestration, and emergency response dashboard',
     keywords: ['emergency', 'accident detection', 'green corridor', 'ambulance tracking'],
 };

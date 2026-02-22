@@ -52,7 +52,7 @@ notifyRouter.post('/sos', async (req: Request, res: Response) => {
         if (fcmTokens.length > 0) {
             await sendMulticastFCM(
                 fcmTokens,
-                '🚨 EMERGENCY SOS — RescuEdge',
+                '🚨 EMERGENCY SOS — RapidRescue',
                 `Accident at ${payload.location.lat.toFixed(4)}, ${payload.location.lng.toFixed(4)}. Tap to respond.`,
                 {
                     accidentId: payload.accidentId,
@@ -119,7 +119,16 @@ notifyRouter.post('/register-responder', (req: Request, res: Response) => {
         return;
     }
     const { responderId, userId, name, fcmToken, location, vehicleId, hospitalId } = parsed.data;
-    registerResponder({ responderId, userId, name, fcmToken, location, available: true, vehicleId, hospitalId });
+    registerResponder({
+        responderId,
+        userId,
+        name,
+        fcmToken,
+        location: { lat: location.lat, lng: location.lng },
+        available: true,
+        vehicleId,
+        hospitalId
+    });
     res.json({ payload: { status: 'REGISTERED', responderId } });
 });
 

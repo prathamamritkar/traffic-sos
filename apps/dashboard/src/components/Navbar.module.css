@@ -8,18 +8,18 @@
        Cold 0D1221 blue-black on the navbar signals clinical detachment
        vs. the site-wide warm bg0 (#0A0A0F). This keeps the header
        visually belonging to the same surface hierarchy. */
-    background: rgba(10, 10, 15, 0.92);
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
-    border-bottom: 1px solid var(--md-sys-color-outline);
+    background: var(--nav-bg);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .nav {
     display: flex;
     align-items: center;
-    height: 60px;
-    padding: 0 20px;
-    gap: 12px;
+    height: 64px;
+    padding: 0 16px;
+    gap: 16px;
     max-width: 1920px;
     margin: 0 auto;
 }
@@ -28,7 +28,7 @@
 .left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     flex: 1;
     min-width: 0;
 }
@@ -36,70 +36,59 @@
 .logo {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 12px;
     text-decoration: none;
     flex-shrink: 0;
 }
 
 .logoMark {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
     background: var(--md-sys-color-primary-container);
-    /* brandRed opacity — not fire-red; it's a nav mark, not an alert */
-    border: 1px solid rgba(211, 47, 47, 0.25);
+    border: 1px solid var(--md-sys-color-outline-variant);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .logoText {
-    font-size: 17px;
-    font-weight: 900;
+    font: 900 var(--text-title)/1 var(--font-sans);
     color: var(--md-sys-color-on-surface);
-    letter-spacing: -0.3px;
-    font-family: var(--font-sans);
+    letter-spacing: -0.5px;
 }
 
 .separator {
     width: 1px;
-    height: 22px;
-    background: var(--md-sys-color-outline);
+    height: 24px;
+    background: var(--md-sys-color-outline-variant);
     flex-shrink: 0;
 }
 
 .liveStatus {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
-/* LIVE text: safeGreen = monitoring active = calm reassurance.
-   Using textMuted gray would fail to communicate that monitoring
-   is actively protecting the user. Green reinforces "system is on"
-   without triggering alarm (which bright alarm-green would do). */
 .liveText {
-    font-size: 11px;
-    font-weight: 800;
+    font: 800 var(--text-caption)/1 var(--font-sans);
     letter-spacing: 0.8px;
     color: var(--color-safe-green);
-    font-family: var(--font-sans);
 }
 
 .incidentPill {
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
+    gap: 6px;
+    padding: 4px 12px;
     background: var(--md-sys-color-primary-container);
-    /* Uses brandRed opacity — stays calm until incident count > 0 */
-    border: 1px solid rgba(211, 47, 47, 0.25);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-full);
-    font-size: 10px;
-    font-weight: 800;
+    font: 800 var(--text-caption)/1 var(--font-sans);
     color: var(--md-sys-color-on-primary-container);
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
     white-space: nowrap;
 }
 
@@ -121,30 +110,29 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 3px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--md-sys-color-surface-container-low);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .navLink {
-    padding: 6px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font: 600 var(--text-label)/1 var(--font-sans);
     color: var(--md-sys-color-on-surface-variant);
-    transition: all 0.2s;
+    transition: all var(--duration-short) var(--easing-standard);
     text-decoration: none;
 }
 
 .navLinkActive {
-    background: var(--md-sys-color-primary-container);
+    background: var(--md-sys-color-surface-container-high);
     color: var(--md-sys-color-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .navLink:hover:not(.navLinkActive) {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--md-sys-color-surface-container-highest);
     color: var(--md-sys-color-on-surface);
 }
 
@@ -184,15 +172,13 @@
 .avatar[data-role="admin"] {
     background: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
-    /* brandRed border — role identity, not alarm */
-    border-color: rgba(211, 47, 47, 0.18);
+    border-color: color-mix(in srgb, var(--md-sys-color-primary), transparent 80%);
 }
 
 .avatar[data-role="responder"] {
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
-    /* aiBlue border — responders are information/action agents */
-    border-color: rgba(25, 118, 210, 0.20);
+    border-color: color-mix(in srgb, var(--md-sys-color-secondary), transparent 85%);
 }
 
 .userMeta {
@@ -234,16 +220,35 @@
     position: relative;
 }
 
+.badgeCount {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+    font-size: 9px;
+    font-weight: 900;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 4px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--md-sys-color-surface-container-lowest);
+    pointer-events: none;
+}
+
 .dropdown {
     position: absolute;
     top: 45px;
     right: 0;
     width: 300px;
-    background: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 12px;
     padding: 12px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--shadow-lg);
     z-index: 2000;
     display: flex;
     flex-direction: column;
@@ -264,23 +269,50 @@
     }
 }
 
+.dropdownHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    padding: 4px 4px 10px;
+    margin-bottom: 6px;
+}
+
 .dropdownTitle {
     font-size: 11px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--md-sys-color-on-surface-variant);
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    padding: 4px 4px 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    margin-bottom: 4px;
+}
+
+.clearBtn {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-primary);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.clearBtn:hover:not(:disabled) {
+    background: var(--md-sys-color-primary-container);
+}
+
+.clearBtn:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
 .dropdownItem {
     padding: 10px 12px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, var(--md-sys-color-surface-container), transparent 90%);
     font-size: 13px;
-    color: #e2e8f0;
+    color: var(--md-sys-color-on-surface);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -290,16 +322,16 @@
 }
 
 .dropdownItem:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.05);
+    background: var(--md-sys-color-surface-container-highest);
+    border-color: var(--md-sys-color-outline-variant);
 }
 
 .notificationIcon {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -310,6 +342,20 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    overflow: hidden;
+}
+
+.notificationText span:first-child {
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notificationDesc {
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.2;
 }
 
 .notificationTime {
@@ -319,7 +365,16 @@
 
 .emptyState {
     text-align: center;
-    padding: 24px;
-    color: #64748b;
+    padding: 32px 16px;
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.emptyState span {
+    font-size: 32px;
+    opacity: 0.3;
 }

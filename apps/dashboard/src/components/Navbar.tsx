@@ -2,23 +2,43 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import type { AppNotification } from '@/hooks/useLiveData';
 import styles from './Navbar.module.css';
 
 interface NavbarProps {
     user: { name: string; role: string; email: string };
     connected: boolean;
     activeIncidents?: number;
+    notifications?: AppNotification[];
+    onClearNotifications?: () => void;
+    onOpenSettings?: () => void;
+    onTutorialStep?: () => void;
+    tutorialStep?: number;
 }
 
-export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
+export function Navbar({
+    user,
+    connected,
+    activeIncidents = 0,
+    notifications = [],
+    onClearNotifications,
+    onOpenSettings,
+    onTutorialStep,
+    tutorialStep = 0
+}: NavbarProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const [openDropdown, setOpenDropdown] = useState<'notifications' | 'settings' | null>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        router.prefetch('/dashboard');
+        router.prefetch('/analytics');
+    }, [router]);
 
     // Close on click outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            // Cast to Node is safe here because we're in the browser
             if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
                 setOpenDropdown(null);
             }
@@ -31,18 +51,27 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
         setOpenDropdown(openDropdown === menu ? null : menu);
     };
 
+    const formatTime = (iso: string) => {
+        const date = new Date(iso);
+        const now = new Date();
+        const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return date.toLocaleDateString();
+    };
+
     const logout = () => {
         try {
-            localStorage.removeItem('rescuedge_token');
-            localStorage.removeItem('rescuedge_user');
-        } catch {
-            // localStorage may be unavailable in some browser contexts
-        }
+            localStorage.removeItem('rapidrescue_token');
+            localStorage.removeItem('rapidrescue_user');
+            // Reset theme attribute to prevent theme leakage to login page
+            document.documentElement.removeAttribute('data-theme');
+        } catch { }
         router.push('/');
     };
 
-    // Safe initials — filter out empty segments (double-spaces, leading/trailing)
-    // and guard against undefined n[0] when a segment is an empty string
     const initials = user.name
         .split(' ')
         .map((n) => n.trim())
@@ -57,16 +86,16 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
             <nav className={styles.nav} aria-label="Main navigation">
                 {/* ── Left ─────────────────────────────────── */}
                 <div className={styles.left}>
-                    <div className={styles.logo} aria-label="RescuEdge home">
+                    <div className={styles.logo} aria-label="RapidRescue home">
                         <div className={styles.logoMark} aria-hidden="true">
                             <span
                                 className="material-icons-round"
                                 style={{ fontSize: 18, color: 'var(--md-sys-color-primary)' }}
                             >
-                                local_hospital
+                                emergency
                             </span>
                         </div>
-                        <span className={styles.logoText}>RescuEdge</span>
+                        <span className={styles.logoText}>RapidRescue</span>
                         <span className="badge badge-red" aria-label="ADGC system">ADGC</span>
                     </div>
 
@@ -108,13 +137,15 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
                     <div className={styles.navLinks}>
                         <Link
                             href="/dashboard"
-                            className={`${styles.navLink} ${usePathname() === '/dashboard' ? styles.navLinkActive : ''}`}
+                            prefetch
+                            className={`${styles.navLink} ${pathname === '/dashboard' ? styles.navLinkActive : ''}`}
                         >
                             Dashboard
                         </Link>
                         <Link
                             href="/analytics"
-                            className={`${styles.navLink} ${usePathname() === '/analytics' ? styles.navLinkActive : ''}`}
+                            prefetch
+                            className={`${styles.navLink} ${pathname === '/analytics' ? styles.navLinkActive : ''}`}
                         >
                             Analytics
                         </Link>
@@ -133,65 +164,80 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
                             onClick={() => toggle('notifications')}
                         >
                             <span className="material-icons-round" style={{ fontSize: 20 }}>
-                                notifications_none
+                                {notifications.length > 0 ? 'notifications_active' : 'notifications_none'}
                             </span>
+                            {notifications.length > 0 && <span className={styles.badgeCount}>{notifications.length}</span>}
                         </button>
                         {openDropdown === 'notifications' && (
                             <div className={styles.dropdown}>
-                                <div className={styles.dropdownTitle}>Recent Alerts</div>
-                                <div className={styles.dropdownItem}>
-                                    <div className={styles.notificationIcon}>
-                                        <span className="material-icons-round" style={{ fontSize: 16 }}>warning</span>
-                                    </div>
-                                    <div className={styles.notificationText}>
-                                        <span>New Accident Detected</span>
-                                        <span className={styles.notificationTime}>2 mins ago · Baner Rd</span>
-                                    </div>
+                                <div className={styles.dropdownHeader}>
+                                    <div className={styles.dropdownTitle}>Recent Alerts</div>
+                                    <button
+                                        className={styles.clearBtn}
+                                        onClick={onClearNotifications}
+                                        disabled={notifications.length === 0}
+                                    >
+                                        Clear All
+                                    </button>
                                 </div>
-                                <div className={styles.dropdownItem}>
-                                    <div className={styles.notificationIcon} style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80' }}>
-                                        <span className="material-icons-round" style={{ fontSize: 16 }}>check_circle</span>
+
+                                {notifications.length === 0 ? (
+                                    <div className={styles.emptyState}>
+                                        <span className="material-icons-round">notifications_off</span>
+                                        <p>No new notifications</p>
                                     </div>
-                                    <div className={styles.notificationText}>
-                                        <span>Ambulance Arrived</span>
-                                        <span className={styles.notificationTime}>15 mins ago · FC Rd</span>
-                                    </div>
-                                </div>
+                                ) : (
+                                    notifications.map(notif => (
+                                        <div key={notif.id} className={styles.dropdownItem}>
+                                            <div
+                                                className={styles.notificationIcon}
+                                                style={notif.type === 'SOS' ? {
+                                                    background: 'var(--md-sys-color-error-container)',
+                                                    color: 'var(--md-sys-color-error)'
+                                                } : {}}
+                                            >
+                                                <span className="material-icons-round" style={{ fontSize: 16 }}>{notif.icon}</span>
+                                            </div>
+                                            <div className={styles.notificationText}>
+                                                <span>{notif.title}</span>
+                                                <span className={styles.notificationDesc}>{notif.message}</span>
+                                                <span className={styles.notificationTime}>{formatTime(notif.time)}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         )}
                     </div>
 
-                    {/* Settings */}
-                    <div className={styles.dropdownWrapper}>
+                    {/* Tutorial */}
+                    {onTutorialStep && (
                         <button
-                            id="settings-btn"
-                            className={`btn btn-icon ${openDropdown === 'settings' ? 'btn-active' : ''}`}
-                            aria-label="Settings"
-                            title="Settings"
-                            onClick={() => toggle('settings')}
+                            id="tutorial-btn"
+                            className="btn btn-icon"
+                            aria-label="Run tutorial step"
+                            title={`Tutorial Step ${tutorialStep}/5 — Click to advance`}
+                            onClick={onTutorialStep}
                         >
                             <span className="material-icons-round" style={{ fontSize: 20 }}>
-                                settings
+                                model_training
                             </span>
                         </button>
-                        {openDropdown === 'settings' && (
-                            <div className={styles.dropdown}>
-                                <div className={styles.dropdownTitle}>System Settings</div>
-                                <div className={styles.dropdownItem} onClick={() => alert('Dark mode is enforced for command center')}>
-                                    <span className="material-icons-round" style={{ fontSize: 18 }}>dark_mode</span>
-                                    <span>Appearance: Dark</span>
-                                </div>
-                                <div className={styles.dropdownItem}>
-                                    <span className="material-icons-round" style={{ fontSize: 18 }}>notifications_active</span>
-                                    <span>Sound Alerts: On</span>
-                                </div>
-                                <div className={styles.dropdownItem}>
-                                    <span className="material-icons-round" style={{ fontSize: 18 }}>dns</span>
-                                    <span>Server: Production</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    )}
+
+                    {/* Settings */}
+                    <button
+                        id="settings-btn"
+                        className="btn btn-icon"
+                        aria-label="Settings"
+                        title="Settings"
+                        onClick={onOpenSettings}
+                    >
+                        <span className="material-icons-round" style={{ fontSize: 20 }}>
+                            settings
+                        </span>
+                    </button>
+
 
                     <div className={styles.separator} aria-hidden="true" />
 
@@ -206,12 +252,6 @@ export function Navbar({ user, connected, activeIncidents = 0 }: NavbarProps) {
                         </div>
                         <div className={styles.userMeta}>
                             <span className={styles.userName}>{user.name}</span>
-                            <span
-                                className={`badge ${user.role === 'ADMIN' ? 'badge-red' : 'badge-blue'}`}
-                                aria-label={`Role: ${user.role}`}
-                            >
-                                {user.role}
-                            </span>
                         </div>
                     </div>
 

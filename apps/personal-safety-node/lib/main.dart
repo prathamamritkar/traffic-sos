@@ -1,5 +1,4 @@
-// ============================================================
-// RescuEdge — Personal Safety Node
+// RapidRescue — Personal Safety Node
 // Material 3 production entry point
 // Fixes:
 //  • Firebase.initializeApp() was missing — all Firebase calls
@@ -75,17 +74,17 @@ void main() async {
 
   runApp(
     // ProviderScope is REQUIRED for all Riverpod providers
-    const ProviderScope(child: RescuEdgeApp()),
+    const ProviderScope(child: RapidRescueApp()),
   );
 }
 
-class RescuEdgeApp extends StatelessWidget {
-  const RescuEdgeApp({super.key});
+class RapidRescueApp extends StatelessWidget {
+  const RapidRescueApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title:                    'RescuEdge',
+      title:                    'RapidRescue',
       debugShowCheckedModeBanner: false,
       theme:                    buildAppTheme(),
       initialRoute:             '/',

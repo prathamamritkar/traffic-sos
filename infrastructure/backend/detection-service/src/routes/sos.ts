@@ -185,7 +185,7 @@ sosRouter.post('/', async (req: AuthenticatedRequest, res: Response) => {
 
     // 7. Publish to MQTT event stream
     mqttClient.publish(
-        `rescuedge/sos/${accidentId}`,
+        `rapidrescue/sos/${accidentId}`,
         JSON.stringify(rctfEnvelope),
         { qos: 1, retain: false }
     );
@@ -276,7 +276,7 @@ sosRouter.patch('/:id/cancel', (req: AuthenticatedRequest, res: Response) => {
     caseStore.set(req.params.id, caseRecord);
 
     mqttClient.publish(
-        `rescuedge/sos/${req.params.id}/cancel`,
+        `rapidrescue/sos/${req.params.id}/cancel`,
         JSON.stringify({ accidentId: req.params.id, status: 'CANCELLED' }),
         { qos: 1 }
     );
@@ -309,7 +309,7 @@ sosRouter.patch('/:id/status', (req: AuthenticatedRequest, res: Response) => {
     caseStore.set(req.params.id, caseRecord);
 
     mqttClient.publish(
-        `rescuedge/case/${req.params.id}/status`,
+        `rapidrescue/case/${req.params.id}/status`,
         JSON.stringify({ accidentId: req.params.id, status }),
         { qos: 1 }
     );

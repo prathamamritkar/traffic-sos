@@ -14,10 +14,10 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import type { RCTFAuth, Role } from '../../../../shared/models/rctf';
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'rescuedge-dev-secret-change-in-prod';
+const JWT_SECRET = process.env.JWT_SECRET ?? 'rapidrescue-dev-secret-change-in-prod';
 
 // Fail hard at startup in production if the secret is the default value
-if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'rescuedge-dev-secret-change-in-prod') {
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'rapidrescue-dev-secret-change-in-prod') {
     console.error('[auth] FATAL: JWT_SECRET must be set to a strong secret in production');
     process.exit(1);
 }

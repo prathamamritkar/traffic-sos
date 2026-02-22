@@ -9,17 +9,16 @@ interface SOSFeedProps {
     onSelect: (c: CaseRecord) => void;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; emoji: string }> = {
-    DETECTED: { label: 'Detected', color: 'red', emoji: '🚨' },
-    DISPATCHED: { label: 'Dispatched', color: 'yellow', emoji: '📡' },
-    EN_ROUTE: { label: 'En Route', color: 'blue', emoji: '🚑' },
-    ARRIVED: { label: 'Arrived', color: 'green', emoji: '✅' },
-    RESOLVED: { label: 'Resolved', color: 'green', emoji: '✔️' },
-    CANCELLED: { label: 'Cancelled', color: 'yellow', emoji: '❌' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
+    DETECTED: { label: 'Detected', color: 'red', icon: 'car_crash' },
+    DISPATCHED: { label: 'Dispatched', color: 'yellow', icon: 'emergency_share' },
+    EN_ROUTE: { label: 'En Route', color: 'blue', icon: 'emergency' },
+    ARRIVED: { label: 'Arrived', color: 'green', icon: 'location_on' },
+    RESOLVED: { label: 'Resolved', color: 'green', icon: 'task_alt' },
+    CANCELLED: { label: 'Cancelled', color: 'yellow', icon: 'block' },
 };
 
-// Fallback config for unknown status values (forward-compat)
-const FALLBACK_STATUS = { label: 'Unknown', color: 'yellow', emoji: '❓' };
+const FALLBACK_STATUS = { label: 'Unknown', color: 'yellow', icon: 'help' };
 
 /** Safe date-distance formatter — never throws on malformed timestamps */
 function safeTimeAgo(dateStr: string): string {
@@ -36,21 +35,20 @@ export function SOSFeed({ cases, selectedId, onSelect }: SOSFeedProps) {
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    const activeCount = cases.filter(
-        (c) => c.status !== 'RESOLVED' && c.status !== 'CANCELLED'
-    ).length;
 
     return (
         <div className={styles.feed}>
             <div className={styles.header}>
-                <span className={styles.headerTitle}>SOS Feed</span>
-                <span className="badge badge-red">{activeCount} Active</span>
+                <div className={styles.titleWrapper}>
+                    <span className="material-icons-round" style={{ fontSize: '18px' }}>radar</span>
+                    <span className={styles.headerTitle}>SOS Feed</span>
+                </div>
             </div>
 
             <div className={styles.list}>
                 {sorted.length === 0 ? (
                     <div className={styles.empty}>
-                        <span>🟢</span>
+                        <span className="material-icons-round">verified</span>
                         <p>No active incidents</p>
                     </div>
                 ) : (
@@ -90,7 +88,9 @@ function CaseCard({
         >
             <div className={styles.cardTop}>
                 <div className={styles.cardLeft}>
-                    <span className={styles.emoji} aria-hidden="true">{cfg.emoji}</span>
+                    <span className="material-icons-round" style={{ fontSize: '20px', color: `var(--indicator-${cfg.color.toUpperCase()})` }}>
+                        {cfg.icon}
+                    </span>
                     <div>
                         <div className={styles.accidentId}>{caseRecord.accidentId}</div>
                         <div className={styles.location}>
@@ -122,7 +122,8 @@ function CaseCard({
 
             {caseRecord.responderId && (
                 <div className={styles.responderInfo}>
-                    <span>🚑 {caseRecord.responderId} assigned</span>
+                    <span className="material-icons-round" style={{ fontSize: '14px' }}>local_hospital</span>
+                    <span>{caseRecord.responderId} assigned</span>
                 </div>
             )}
         </button>

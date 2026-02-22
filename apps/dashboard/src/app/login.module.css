@@ -21,8 +21,9 @@
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        linear-gradient(var(--md-sys-color-outline-variant) 1px, transparent 1px),
+        linear-gradient(90deg, var(--md-sys-color-outline-variant) 1px, transparent 1px);
+    opacity: 0.1;
     background-size: 32px 32px;
 }
 
@@ -63,9 +64,9 @@
     display: none;
     flex: 1;
     background: linear-gradient(145deg,
-            rgba(13, 18, 33, 0.95) 0%,
-            rgba(7, 11, 24, 0.98) 100%);
-    border-right: 1px solid var(--md-sys-color-outline);
+            var(--md-sys-color-surface-container-low) 0%,
+            var(--md-sys-color-surface-container) 100%);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
     padding: 60px;
     align-items: center;
     justify-content: center;
@@ -167,8 +168,8 @@
 .card {
     width: 100%;
     max-width: 420px;
-    background: var(--md-sys-color-surface-container);
-    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 24px;
     padding: 32px;
     animation: fadeIn 0.5s var(--easing-decel) forwards;

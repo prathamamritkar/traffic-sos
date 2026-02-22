@@ -183,6 +183,17 @@ class CorridorEngine {
         }
 
         this.publishMissionUpdate(mission);
+
+        // Notify that case status is now ARRIVED
+        mqttClient.publish(
+            `rapidrescue/case/${mission.accidentId}/status`,
+            JSON.stringify({
+                accidentId: mission.accidentId,
+                status: 'ARRIVED',
+                entityId: mission.entityId
+            }),
+            { qos: 1 }
+        );
     }
 
     // ── Manually trigger hospital routing (API-driven) ────────
@@ -236,14 +247,14 @@ class CorridorEngine {
         };
 
         mqttClient.publish(
-            `rescuedge/mission/${mission.accidentId}/update`,
+            `rapidrescue/mission/${mission.accidentId}/update`,
             JSON.stringify(missionPayload),
             { qos: 1 }
         );
 
         // Also notify via the corridor channel for dashboard consumption
         mqttClient.publish(
-            `rescuedge/corridor/${mission.accidentId}/mission`,
+            `rapidrescue/corridor/${mission.accidentId}/mission`,
             JSON.stringify(missionPayload),
             { qos: 1 }
         );
@@ -305,8 +316,8 @@ class CorridorEngine {
                 corridor: true,
             };
 
-            mqttClient.publish(`rescuedge/signal/${signal.signalId}/command`, JSON.stringify(payload), { qos: 1 });
-            mqttClient.publish(`rescuedge/corridor/${accidentId}/signal`, JSON.stringify(payload), { qos: 1 });
+            mqttClient.publish(`rapidrescue/signal/${signal.signalId}/command`, JSON.stringify(payload), { qos: 1 });
+            mqttClient.publish(`rapidrescue/corridor/${accidentId}/signal`, JSON.stringify(payload), { qos: 1 });
 
             console.log(`[corridor-service] Signal ${signal.signalId} (${signal.junctionId}) → GREEN for ${accidentId}`);
 
@@ -340,8 +351,8 @@ class CorridorEngine {
             corridor: false,
         };
 
-        mqttClient.publish(`rescuedge/signal/${signal.signalId}/command`, JSON.stringify(payload), { qos: 1 });
-        mqttClient.publish(`rescuedge/corridor/${accidentId}/signal`, JSON.stringify(payload), { qos: 1 });
+        mqttClient.publish(`rapidrescue/signal/${signal.signalId}/command`, JSON.stringify(payload), { qos: 1 });
+        mqttClient.publish(`rapidrescue/corridor/${accidentId}/signal`, JSON.stringify(payload), { qos: 1 });
 
         // Clean up from activeCorridors
         this.activeCorridors.get(accidentId)?.delete(signal.signalId);
@@ -377,7 +388,7 @@ class CorridorEngine {
     addSignal(signal: SignalRecord): void {
         // Validate coordinates before adding
         if (
-            typeof signal.lat !== 'number' &&
+            typeof signal.location.lat !== 'number' ||
             (signal.location.lat < -90 || signal.location.lat > 90 ||
                 signal.location.lng < -180 || signal.location.lng > 180)
         ) {

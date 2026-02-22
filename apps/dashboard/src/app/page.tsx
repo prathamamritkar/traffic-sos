@@ -5,11 +5,11 @@ import styles from './login.module.css';
 
 // ── Demo provisioned accounts ────────────────────────────────────
 const DEMO_ACCOUNTS: Record<string, { role: string; name: string }> = {
-    'admin@rescuedge.app': { role: 'ADMIN', name: 'Admin User' },
-    'responder@rescuedge.app': { role: 'RESPONDER_ADMIN', name: 'Responder Admin' },
+    'admin@rapidrescue.app': { role: 'ADMIN', name: 'Admin User' },
+    'responder@rapidrescue.app': { role: 'RESPONDER_ADMIN', name: 'Responder Admin' },
 };
 // Password fallback only for development; production SHOULD set this env var.
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? 'rescuedge2026';
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? 'rapidrescue2026';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -22,13 +22,25 @@ export default function LoginPage() {
     // Prevent double-submit if user clicks button twice quickly
     const submittingRef = useRef(false);
 
-    // Redirect already-authenticated users
+    // Redirect already-authenticated users and cleanup theme
     useEffect(() => {
         try {
-            const token = localStorage.getItem('rescuedge_token');
-            if (token) router.replace('/dashboard');
+            const token = localStorage.getItem('rapidrescue_token');
+            const userData = localStorage.getItem('rapidrescue_user');
+            if (token && userData) {
+                // Both session artifacts exist — safe to redirect
+                router.replace('/dashboard');
+            } else {
+                // Clear stale/partial session data
+                if (token && !userData) {
+                    localStorage.removeItem('rapidrescue_token');
+                }
+                // Ensure login page always starts in a clean light state
+                // to prevent theme leakage from previous sessions
+                document.documentElement.removeAttribute('data-theme');
+            }
         } catch {
-            // localStorage unavailable (private browsing? iframe sandbox?)
+            // localStorage unavailable
         }
     }, [router]);
 
@@ -76,8 +88,8 @@ export default function LoginPage() {
 
         try {
             const token = btoa(JSON.stringify(payload));
-            localStorage.setItem('rescuedge_token', token);
-            localStorage.setItem('rescuedge_user', JSON.stringify(payload));
+            localStorage.setItem('rapidrescue_token', token);
+            localStorage.setItem('rapidrescue_user', JSON.stringify(payload));
         } catch {
             setError('Unable to save session. Ensure cookies/storage are not blocked.');
             setLoading(false);
@@ -111,18 +123,18 @@ export default function LoginPage() {
                         <div className={styles.brandLogo}>
                             <span className={styles.brandIcon}>+</span>
                         </div>
-                        <h1 className={styles.brandTitle}>RescuEdge</h1>
+                        <h1 className={styles.brandTitle}>RapidRescue</h1>
                         <p className={styles.brandTag}>ADGC Command Center</p>
 
                         <div className={styles.brandFeatures}>
                             {[
-                                { icon: '🗺️', label: 'Live accident tracking on map' },
-                                { icon: '🚑', label: 'Real-time ambulance dispatch' },
-                                { icon: '🚦', label: 'Green Corridor orchestration' },
-                                { icon: '🧠', label: 'AI-powered scene intelligence' },
+                                { icon: 'explore', label: 'Live accident tracking on map' },
+                                { icon: 'emergency', label: 'Real-time ambulance dispatch' },
+                                { icon: 'traffic', label: 'Green Corridor orchestration' },
+                                { icon: 'bolt', label: 'AI-powered scene intelligence' },
                             ].map(({ icon, label }) => (
                                 <div key={label} className={styles.brandFeature}>
-                                    <span className={styles.brandFeatureIcon}>{icon}</span>
+                                    <span className={`${styles.brandFeatureIcon} material-icons-round`}>{icon}</span>
                                     <span className={styles.brandFeatureLabel}>{label}</span>
                                 </div>
                             ))}
@@ -165,7 +177,7 @@ export default function LoginPage() {
                                         value={email}
                                         onChange={(e) => { setEmail(e.target.value); setError(''); }}
                                         className={`md-text-field ${styles.input}`}
-                                        placeholder="you@rescuedge.app"
+                                        placeholder="you@rapidrescue.app"
                                         autoComplete="email"
                                         required
                                         disabled={loading}
@@ -250,14 +262,14 @@ export default function LoginPage() {
                             <button
                                 id="demo-admin-btn"
                                 className={styles.demoAccount}
-                                onClick={() => fillDemo('admin@rescuedge.app')}
+                                onClick={() => fillDemo('admin@rapidrescue.app')}
                                 type="button"
                                 disabled={loading}
                             >
                                 <div className={styles.demoAccountAvatar} data-role="admin">A</div>
                                 <div className={styles.demoAccountInfo}>
                                     <span className={styles.demoAccountName}>Admin User</span>
-                                    <span className={styles.demoAccountEmail}>admin@rescuedge.app</span>
+                                    <span className={styles.demoAccountEmail}>admin@rapidrescue.app</span>
                                 </div>
                                 <span className="badge badge-red">ADMIN</span>
                             </button>
@@ -265,14 +277,14 @@ export default function LoginPage() {
                             <button
                                 id="demo-responder-btn"
                                 className={styles.demoAccount}
-                                onClick={() => fillDemo('responder@rescuedge.app')}
+                                onClick={() => fillDemo('responder@rapidrescue.app')}
                                 type="button"
                                 disabled={loading}
                             >
                                 <div className={styles.demoAccountAvatar} data-role="responder">R</div>
                                 <div className={styles.demoAccountInfo}>
                                     <span className={styles.demoAccountName}>Responder Admin</span>
-                                    <span className={styles.demoAccountEmail}>responder@rescuedge.app</span>
+                                    <span className={styles.demoAccountEmail}>responder@rapidrescue.app</span>
                                 </div>
                                 <span className="badge badge-blue">RESPONDER</span>
                             </button>

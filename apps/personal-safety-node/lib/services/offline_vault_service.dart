@@ -20,9 +20,9 @@ class OfflineVaultService {
   factory OfflineVaultService() => _instance;
   OfflineVaultService._();
 
-  static const String _kMedicalKey    = 'rescuedge_medical_profile';
-  static const String _kContactsKey   = 'rescuedge_emergency_contacts';
-  static const String _kPendingSosKey = 'rescuedge_pending_sos';
+  static const String _kMedicalKey    = 'rapidrescue_medical_profile';
+  static const String _kContactsKey   = 'rapidrescue_emergency_contacts';
+  static const String _kPendingSosKey = 'rapidrescue_pending_sos';
 
   // ── Medical Profile ────────────────────────────────────────
 

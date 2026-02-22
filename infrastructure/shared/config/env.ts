@@ -1,5 +1,5 @@
 // ============================================================
-// RescuEdge Environment Configuration
+// RapidRescue Environment Configuration
 // Fixes:
 //  • Production JWT secret was empty string '' — empty string is
 //    falsy but IS a valid value for `?? ''` so no fallback fired.
@@ -32,14 +32,14 @@ export interface AuthConfig {
     googleClientId: string;
 }
 
-export interface RescuEdgeConfig {
+export interface RapidRescueConfig {
     env: EnvName;
     services: ServiceConfig;
     auth: AuthConfig;
     version: '1.0';
 }
 
-const configs: Record<EnvName, RescuEdgeConfig> = {
+const configs: Record<EnvName, RapidRescueConfig> = {
     development: {
         env: 'development',
         version: '1.0',
@@ -54,7 +54,7 @@ const configs: Record<EnvName, RescuEdgeConfig> = {
         },
         auth: {
             // Dev uses a known insecure default — safe for local development only
-            jwtSecret: process.env.JWT_SECRET ?? 'rescuedge-dev-secret-change-in-prod',
+            jwtSecret: process.env.JWT_SECRET ?? 'rapidrescue-dev-secret-change-in-prod',
             jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
             googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
         },
@@ -64,11 +64,11 @@ const configs: Record<EnvName, RescuEdgeConfig> = {
         env: 'staging',
         version: '1.0',
         services: {
-            detectionServiceUrl: process.env.DETECTION_SERVICE_URL ?? 'https://detection.rescuedge-staging.app',
-            corridorServiceUrl: process.env.CORRIDOR_SERVICE_URL ?? 'https://corridor.rescuedge-staging.app',
-            notificationServiceUrl: process.env.NOTIFICATION_SERVICE_URL ?? 'https://notify.rescuedge-staging.app',
-            trackingServiceUrl: process.env.TRACKING_SERVICE_URL ?? 'wss://tracking.rescuedge-staging.app',
-            dashboardUrl: process.env.DASHBOARD_URL ?? 'https://dashboard.rescuedge-staging.app',
+            detectionServiceUrl: process.env.DETECTION_SERVICE_URL ?? 'https://detection.rapidrescue-staging.app',
+            corridorServiceUrl: process.env.CORRIDOR_SERVICE_URL ?? 'https://corridor.rapidrescue-staging.app',
+            notificationServiceUrl: process.env.NOTIFICATION_SERVICE_URL ?? 'https://notify.rapidrescue-staging.app',
+            trackingServiceUrl: process.env.TRACKING_SERVICE_URL ?? 'wss://tracking.rapidrescue-staging.app',
+            dashboardUrl: process.env.DASHBOARD_URL ?? 'https://dashboard.rapidrescue-staging.app',
             mqttBrokerUrl: process.env.MQTT_BROKER_URL ?? 'mqtt://broker.hivemq.com:1883',
             mqttBrokerWsUrl: process.env.MQTT_BROKER_WS_URL ?? 'wss://broker.hivemq.com:8884/mqtt',
         },
@@ -106,7 +106,7 @@ function resolveEnv(): EnvName {
     return 'development';
 }
 
-export const config: RescuEdgeConfig = configs[resolveEnv()];
+export const config: RapidRescueConfig = configs[resolveEnv()];
 export default config;
 
 /**
@@ -121,7 +121,7 @@ export function validateConfig(): void {
             console.error('[config] FATAL: JWT_SECRET must be set in staging/production');
             process.exit(1);
         }
-        if (config.auth.jwtSecret === 'rescuedge-dev-secret-change-in-prod') {
+        if (config.auth.jwtSecret === 'rapidrescue-dev-secret-change-in-prod') {
             console.error('[config] FATAL: Default JWT_SECRET detected in non-development environment');
             process.exit(1);
         }

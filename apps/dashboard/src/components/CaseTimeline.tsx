@@ -38,14 +38,6 @@ export function CaseTimeline({ caseRecord }: CaseTimelineProps) {
 
     return (
         <div className={styles.timeline}>
-            <div className={styles.timelineTitle}>
-                <span>⏳</span> Incident Timeline
-                {isCancelled && (
-                    <span className="badge badge-yellow" style={{ marginLeft: 8 }}>
-                        CANCELLED
-                    </span>
-                )}
-            </div>
             <div className={styles.timelineList}>
                 {STEPS.map((step, index) => {
                     const isCompleted = isResolved || index < safeIndex;
@@ -63,7 +55,11 @@ export function CaseTimeline({ caseRecord }: CaseTimelineProps) {
                     return (
                         <div key={step.status} className={stepClass}>
                             <div className={styles.stepLine} />
-                            <div className={styles.stepIcon} />
+                            <div className={styles.stepIcon}>
+                                <span className="material-icons-round" style={{ fontSize: '12px' }}>
+                                    {isCompleted ? 'task_alt' : isActive ? 'radio_button_checked' : 'radio_button_unchecked'}
+                                </span>
+                            </div>
                             <div className={styles.stepContent}>
                                 <div className={styles.stepLabel}>{step.label}</div>
 

@@ -1,11 +1,11 @@
 {
-    "name": "rescuedge_safety_node",
-    "short_name": "rescuedge_safety_node",
+    "name": "RapidRescue",
+    "short_name": "RapidRescue",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "RapidRescue Personal Safety Node — Crash detection, Safety Check, and Emergency SOS pipeline",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

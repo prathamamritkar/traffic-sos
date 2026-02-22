@@ -200,7 +200,7 @@ function broadcastLocationUpdate(payload: LocationUpdatePayload, sender?: WebSoc
 
     // Publish to MQTT for other MQTT subscribers
     mqttBridge.publish(
-        `rescuedge/ambulance/${entityId}/location`,
+        `rapidrescue/ambulance/${entityId}/location`,
         JSON.stringify({ payload: { accidentId, entityId, location } }),
         { qos: 0 }
     );
@@ -251,16 +251,16 @@ server.listen(PORT, '0.0.0.0', () => {
     // Start MQTT AFTER server is listening to avoid race condition
     const BROKER_URL = process.env.MQTT_BROKER_URL ?? 'mqtt://broker.hivemq.com:1883';
     mqttBridge = mqtt.connect(BROKER_URL, {
-        clientId: `rescuedge-tracking-${Math.random().toString(16).slice(2, 14)}`,
+        clientId: `rapidrescue-tracking-${Math.random().toString(16).slice(2, 14)}`,
         clean: true,
         reconnectPeriod: 3000,
     });
 
     mqttBridge.on('connect', () => {
         console.log('[tracking-service] MQTT connected');
-        mqttBridge.subscribe('rescuedge/sos/+', { qos: 1 });
-        mqttBridge.subscribe('rescuedge/case/+/status', { qos: 1 });
-        mqttBridge.subscribe('rescuedge/corridor/+/signal', { qos: 1 });
+        mqttBridge.subscribe('rapidrescue/sos/+', { qos: 1 });
+        mqttBridge.subscribe('rapidrescue/case/+/status', { qos: 1 });
+        mqttBridge.subscribe('rapidrescue/corridor/+/signal', { qos: 1 });
     });
 
     mqttBridge.on('error', (err) => {
@@ -271,7 +271,7 @@ server.listen(PORT, '0.0.0.0', () => {
         try {
             const data = JSON.parse(message.toString());
 
-            if (topic.startsWith('rescuedge/sos/')) {
+            if (topic.startsWith('rapidrescue/sos/')) {
                 // Check if this is a cancellation or a new SOS
                 if (topic.endsWith('/cancel')) {
                     const accidentId = data.accidentId;
@@ -298,8 +298,8 @@ server.listen(PORT, '0.0.0.0', () => {
                 }
             }
 
-            if (topic.startsWith('rescuedge/case/')) {
-                // Status update: rescuedge/case/:id/status
+            if (topic.startsWith('rapidrescue/case/')) {
+                // Status update: rapidrescue/case/:id/status
                 const accidentId = data.accidentId;
                 if (accidentId) {
                     const updateMsg = JSON.stringify({
@@ -311,7 +311,7 @@ server.listen(PORT, '0.0.0.0', () => {
                 }
             }
 
-            if (topic.startsWith('rescuedge/corridor/')) {
+            if (topic.startsWith('rapidrescue/corridor/')) {
                 const accidentId = topic.split('/')[2] ?? 'global';
                 const msg = JSON.stringify({ type: 'SIGNAL_UPDATE', payload: data });
                 broadcastToRoom(accidentId, msg);

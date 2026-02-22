@@ -13,7 +13,7 @@
 import mqtt, { IClientPublishOptions, MqttClient } from 'mqtt';
 
 const BROKER_URL = process.env.MQTT_BROKER_URL ?? 'mqtt://broker.hivemq.com:1883';
-const CLIENT_ID = `rescuedge-detection-${Math.random().toString(16).slice(2, 14)}`;
+const CLIENT_ID = `rapidrescue-detection-${Math.random().toString(16).slice(2, 14)}`;
 
 let client: MqttClient;
 

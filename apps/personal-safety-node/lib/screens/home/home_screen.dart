@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../config/app_theme.dart';
 import '../../services/crash_detection_service.dart';
+import '../../services/stats_service.dart';
 import '../map/safety_map_screen.dart';
 import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
@@ -114,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(width: 10),
           Text(
-            'RescuEdge',
+            'RapidRescue',
             style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
           ),
         ],
@@ -691,41 +692,91 @@ class _FeatureCardWide extends StatelessWidget {
 
 // ── _QuickStats ─────────────────────────────────────────────
 
-class _QuickStats extends StatelessWidget {
+class _QuickStats extends StatefulWidget {
+  const _QuickStats();
+
+  @override
+  State<_QuickStats> createState() => _QuickStatsState();
+}
+
+class _QuickStatsState extends State<_QuickStats> {
+  late Future<void> _statsLoaded;
+
+  String _statusValue = 'Safe';
+  String _gForceValue = '0.0g';
+  String _speedValue = '0 km/h';
+  Color _statusColor = AppColors.safeGreen;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsLoaded = _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final stats = await StatsService().loadSystemStats();
+      if (mounted) {
+        setState(() {
+          _gForceValue = '${stats.avgGForce}g';
+          _speedValue = '${stats.avgSpeed.toStringAsFixed(0)} km/h';
+          _statusValue = StatsService().getStatusIndicator(stats);
+          
+          // Set color based on status
+          switch (StatsService().getStatusColor(stats)) {
+            case 'sos_red':
+              _statusColor = AppColors.redCore;
+              break;
+            case 'warn_amber':
+              _statusColor = AppColors.warnAmber;
+              break;
+            default:
+              _statusColor = AppColors.safeGreen;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('[QuickStats] Failed to load stats: $e');
+      // Keep defaults on error
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(
-          child: _StatTile(
-            label: 'G-Force',
-            value: '0.0g',
-            icon: Icons.show_chart_rounded,
-            // blue = informational / analytical data
-            iconColor: AppColors.aiBlue,
-          ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            label: 'Speed',
-            value: '0 km/h',
-            icon: Icons.speed_rounded,
-            // amber = caution metric — worth watching
-            iconColor: AppColors.warnAmber,
-          ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            label: 'Status',
-            value: 'Safe',
-            icon: Icons.verified_user_outlined,
-            // safeGreen = all clear / passive positive state
-            iconColor: AppColors.safeGreen,
-          ),
-        ),
-      ],
+    return FutureBuilder<void>(
+      future: _statsLoaded,
+      builder: (context, snapshot) {
+        return Row(
+          children: [
+            Expanded(
+              child: _StatTile(
+                label: 'G-Force',
+                value: _gForceValue,
+                icon: Icons.show_chart_rounded,
+                iconColor: AppColors.aiBlue,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                label: 'Speed',
+                value: _speedValue,
+                icon: Icons.speed_rounded,
+                iconColor: AppColors.warnAmber,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatTile(
+                label: 'Status',
+                value: _statusValue,
+                icon: Icons.verified_user_outlined,
+                iconColor: _statusColor,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

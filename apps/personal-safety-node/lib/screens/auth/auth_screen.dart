@@ -142,7 +142,7 @@ class _AuthScreenState extends State<AuthScreen>
                               ),
                               const SizedBox(height: 20),
                               Text(
-                                'RescuEdge',
+                                'RapidRescue',
                                 style: GoogleFonts.inter(
                                   fontSize: 30,
                                   fontWeight: FontWeight.w900,

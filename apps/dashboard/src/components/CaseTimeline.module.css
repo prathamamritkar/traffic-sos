@@ -1,21 +1,9 @@
 .timeline {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 0;
 }
 
 .timelineTitle {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    display: none;
 }
 
 .timelineList {
@@ -23,14 +11,14 @@
     flex-direction: column;
     gap: 0;
     position: relative;
-    padding-left: 0.5rem;
+    padding-left: 8px;
 }
 
 .step {
     display: flex;
-    gap: 1rem;
+    gap: 16px;
     position: relative;
-    padding-bottom: 1.5rem;
+    padding-bottom: 24px;
 }
 
 .step:last-child {
@@ -39,11 +27,16 @@
 
 .stepLine {
     position: absolute;
-    left: 7px;
-    top: 20px;
+    left: 11px;
+    top: 24px;
     bottom: 0;
     width: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--md-sys-color-outline-variant);
+    transition: background-color var(--duration-medium) var(--easing-standard);
+}
+
+.stepCompleted .stepLine {
+    background: var(--md-sys-color-tertiary);
 }
 
 .step:last-child .stepLine {
@@ -51,53 +44,53 @@
 }
 
 .stepIcon {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #1e293b;
-    border: 2px solid #475569;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
+    background: var(--md-sys-color-surface-container-high);
+    border: 2px solid var(--md-sys-color-outline-variant);
     z-index: 1;
-    margin-top: 4px;
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all var(--duration-medium) var(--easing-standard);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .stepActive .stepIcon {
-    background: #3b82f6;
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--md-sys-color-primary), transparent 60%);
 }
 
 .stepCompleted .stepIcon {
-    background: #22c55e;
-    border-color: #22c55e;
-}
-
-.stepAlert .stepIcon {
-    background: #ef4444;
-    border-color: #ef4444;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    background: var(--md-sys-color-tertiary);
+    border-color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-tertiary);
 }
 
 .stepContent {
     flex: 1;
+    padding-top: 2px;
 }
 
 .stepLabel {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #cbd5e1;
+    font: 600 var(--text-body)/1.4 var(--font-sans);
+    color: var(--md-sys-color-on-surface);
 }
 
 .stepTime {
-    font-size: 0.75rem;
-    color: #64748b;
+    font: 400 var(--text-caption)/1.4 var(--font-sans);
+    color: var(--md-sys-color-on-surface-variant);
     margin-top: 2px;
 }
 
 .stepCompleted .stepLabel {
-    color: #94a3b8;
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .stepActive .stepLabel {
-    color: #ffffff;
+    color: var(--md-sys-color-on-surface);
 }

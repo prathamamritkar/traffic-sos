@@ -1,5 +1,5 @@
-name: rescuedge_safety_node
-description: RescuEdge Personal Safety Node — Crash detection, Safety Check, and Emergency SOS pipeline
+name: rapidrescue_safety_node
+description: RapidRescue Personal Safety Node — Crash detection, Safety Check, and Emergency SOS pipeline
 publish_to: 'none'
 version: 1.0.0+1
 

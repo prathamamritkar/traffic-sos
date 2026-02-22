@@ -1,25 +1,29 @@
 .feed {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    overflow: hidden;
+    height: 100%;
+    background: var(--md-sys-color-surface);
 }
 
 .header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.titleWrapper {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    gap: 8px;
+    color: var(--md-sys-color-on-surface);
 }
 
 .headerTitle {
-    font-size: 12px;
-    font-weight: 700;
+    font: 700 0.875rem/1 var(--font-sans);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-secondary);
+    letter-spacing: 1px;
 }
 
 .list {
@@ -27,7 +31,8 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    padding: 12px;
+    gap: 12px;
 }
 
 .empty {
@@ -35,101 +40,103 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 48px 24px;
-    color: var(--text-muted);
-    font-size: 13px;
+    padding: 48px;
+    color: var(--md-sys-color-text-muted);
     text-align: center;
+    gap: 12px;
+}
+
+.empty span {
+    font-size: 48px;
+    opacity: 0.2;
 }
 
 .card {
     width: 100%;
-    padding: 0.75rem 1rem;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
     text-align: left;
-    transition: background 0.15s;
+    padding: 16px;
+    background: var(--md-sys-color-surface-container-low);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-lg);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    font-family: var(--font-sans);
+    gap: 12px;
+    cursor: pointer;
+    transition: all var(--duration-short) var(--easing-standard);
+    outline: none;
 }
 
 .card:hover {
-    background: var(--bg-card);
+    background: var(--md-sys-color-surface-container);
+    border-color: var(--md-sys-color-outline);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-.selected {
-    background: var(--bg-card) !important;
-    border-left: 3px solid var(--red);
+.card.selected {
+    background: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: var(--shadow-md), 0 0 0 1px var(--md-sys-color-primary);
 }
 
 .cardTop {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: flex-start;
 }
 
 .cardLeft {
     display: flex;
+    gap: 12px;
     align-items: center;
-    gap: 10px;
-}
-
-.emoji {
-    font-size: 20px;
 }
 
 .accidentId {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
+    font: 800 0.9375rem/1 var(--font-sans);
+    color: var(--md-sys-color-on-surface);
 }
 
 .location {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 1px;
+    font: 500 0.6875rem/1 var(--font-mono);
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 4px;
 }
 
 .cardBottom {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
 }
 
 .metrics {
     display: flex;
-    gap: 8px;
+    gap: 12px;
 }
 
 .metric {
-    font-size: 11px;
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font: 700 0.75rem/1 var(--font-sans);
+    color: var(--md-sys-color-on-surface);
 }
 
 .metricLabel {
-    color: var(--text-muted);
-    margin-right: 2px;
+    font: 500 0.625rem/1 var(--font-sans);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .time {
-    font-size: 0.75rem;
-    color: #64748b;
+    font: 500 0.6875rem/1 var(--font-sans);
+    color: var(--md-sys-color-text-muted);
 }
 
 .responderInfo {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.75rem;
-    color: #3b82f6;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--md-sys-color-outline-variant);
+    font: 600 0.6875rem/1 var(--font-sans);
+    color: var(--md-sys-color-secondary);
 }

@@ -1,7 +1,7 @@
 {
-  "name": "rescuedge-detection-service",
+  "name": "rapidrescue-detection-service",
   "version": "1.0.0",
-  "description": "RescuEdge SOS ingestion, crash validation, and AccidentID generation service",
+  "description": "RapidRescue SOS ingestion, crash validation, and AccidentID generation service",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

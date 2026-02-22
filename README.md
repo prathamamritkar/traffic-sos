@@ -1,4 +1,4 @@
-# RescuEdge — Personal Safety Node (ADGC)
+# RapidRescue — Personal Safety Node (ADGC)
 ### Unified Emergency Response & Victim-Centric Safety Engine
 
 > **The ultimate safety companion** that transforms the victim's smartphone into an active emergency broadcast node. Featuring Google Personal Safety parity, offline-first vaulting, and an intelligent "Handover Mode" for bystanders.

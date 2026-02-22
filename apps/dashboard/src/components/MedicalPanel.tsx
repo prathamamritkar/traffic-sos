@@ -1,295 +1,247 @@
-import { useState, useEffect } from 'react';
+'use client';
+import { useState } from 'react';
 import type { CaseRecord, CaseStatus } from '@/types/rctf';
 import { CaseTimeline } from './CaseTimeline';
 import styles from './MedicalPanel.module.css';
 
 interface MedicalPanelProps {
     caseRecord: CaseRecord;
-    onStatusUpdate?: (id: string, newStatus: CaseStatus) => Promise<void>;
+    onStatusUpdate: (id: string, status: CaseStatus) => Promise<void>;
 }
 
+const URGENCY_CLASS: Record<string, string> = {
+    IMMEDIATE: 'urgencyImmediate',
+    HIGH: 'urgencyHigh',
+    NORMAL: 'urgencyNormal',
+};
+
 export function MedicalPanel({ caseRecord, onStatusUpdate }: MedicalPanelProps) {
-    const { medicalProfile: mp, metrics, accidentId, status, createdAt, deviceInfo } = caseRecord;
-    const [processingAction, setProcessing] = useState<CaseStatus | null>(null);
+    const [updating, setUpdating] = useState(false);
+    const m = caseRecord.medicalProfile;
+    const c = caseRecord.metrics;
+    const s = caseRecord.sceneAnalysis;
 
-    const handleAction = async (newStatus: CaseStatus) => {
-        if (!onStatusUpdate || processingAction) return;
-        setProcessing(newStatus);
+    const handleStatus = async (status: CaseStatus) => {
+        setUpdating(true);
         try {
-            await onStatusUpdate(accidentId, newStatus);
-        } catch {
-            // Error handling is done in parent, we just stop loading
+            await onStatusUpdate(caseRecord.accidentId, status);
         } finally {
-            setProcessing(null);
+            setUpdating(false);
         }
-    };
-
-    const getBatteryIcon = (level: number, status: string) => {
-        if (status === 'charging') return '⚡';
-        if (level > 90) return '🔋';
-        if (level > 50) return '🔋';
-        if (level > 20) return '🪫';
-        return '🪫';
     };
 
     return (
         <div className={styles.panel}>
+            {/* 1. Header & ID */}
             <div className={styles.header}>
-                <span className={styles.title}>Medical Profile</span>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {deviceInfo && (
-                        <span className="badge badge-gray" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
-                            <span>{getBatteryIcon(deviceInfo.batteryLevel, deviceInfo.batteryStatus)}</span>
-                            <span>{deviceInfo.batteryLevel}%</span>
-                        </span>
-                    )}
-                    <span className="badge badge-red">{accidentId}</span>
+                <div className={styles.caseId}>
+                    <span className={styles.id}>{caseRecord.accidentId}</span>
+                    <span className={styles.timestamp}>
+                        Detected {new Date(caseRecord.createdAt).toLocaleTimeString()}
+                    </span>
+                </div>
+                <span className="badge badge-sos">Live SOS</span>
+            </div>
+
+            {/* 1.5 Timeline progression */}
+            <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                    <span className="material-icons-round" style={{ fontSize: '14px' }}>timeline</span>
+                    <span>Operation Progression</span>
+                </div>
+                <CaseTimeline caseRecord={caseRecord} />
+            </div>
+
+            {/* 2. Medical Profile Section */}
+            <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                    <span className="material-icons-round" style={{ fontSize: '14px' }}>monitor_heart</span>
+                    <span>Victim Medical Profile</span>
+                </div>
+                <div className={styles.grid}>
+                    <div className={styles.item}>
+                        <span className={styles.label}>Blood Group</span>
+                        <span className={`${styles.value} ${styles.bloodGroup}`}>{m.bloodGroup}</span>
+                    </div>
+                    <div className={styles.item}>
+                        <span className={styles.label}>Identity</span>
+                        <span className={styles.value}>{m.age}y / {m.gender}</span>
+                    </div>
+                </div>
+
+                <div className={styles.item}>
+                    <span className={styles.label}>Allergies</span>
+                    <div className={styles.list}>
+                        {m.allergies.length > 0 ? (
+                            m.allergies.map(a => <span key={a} className={`${styles.chip} ${styles.critical}`}>{a}</span>)
+                        ) : (
+                            <span className={styles.value}>None Reported</span>
+                        )}
+                    </div>
+                </div>
+
+                <div className={styles.item}>
+                    <span className={styles.label}>Conditions</span>
+                    <div className={styles.list}>
+                        {m.conditions.map(cond => <span key={cond} className={styles.chip}>{cond}</span>)}
+                    </div>
+                </div>
+
+                <div className={styles.item}>
+                    <span className={styles.label}>Emergency Contacts</span>
+                    <div className={styles.list}>
+                        {m.emergencyContacts.map(phone => (
+                            <span key={phone} className={styles.value} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span className="material-icons-round" style={{ fontSize: '12px' }}>call</span>
+                                {phone}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Case Actions */}
-            <div className={styles.actions}>
-                {status === 'DETECTED' && (
-                    <button
-                        className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
-                        onClick={() => handleAction('DISPATCHED')}
-                        disabled={!!processingAction}
-                    >
-                        {processingAction === 'DISPATCHED' ? '🚀 Dispatching...' : '🚀 Dispatch Ambulance'}
-                    </button>
-                )}
-                {(status === 'DISPATCHED' || status === 'EN_ROUTE' || status === 'ARRIVED') && (
-                    <button
-                        className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
-                        onClick={() => handleAction('RESOLVED')}
-                        disabled={!!processingAction}
-                    >
-                        {processingAction === 'RESOLVED' ? '✅ Resolving...' : '✅ Mark Resolved'}
-                    </button>
-                )}
-                {(status !== 'RESOLVED' && status !== 'CANCELLED') && (
-                    <button
-                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                        onClick={() => handleAction('CANCELLED')}
-                        disabled={!!processingAction}
-                    >
-                        {processingAction === 'CANCELLED' ? '🚫 Cancelling...' : '🚫 Cancel'}
-                    </button>
-                )}
-            </div>
-
-            {/* Vital Stats */}
-            <div className={styles.vitals}>
-                <VitalCard label="Blood Group" value={mp.bloodGroup} highlight />
-                <VitalCard label="Age" value={`${mp.age} yrs`} />
-                <VitalCard label="Gender" value={mp.gender} />
-            </div>
-
-            {/* Intelligent Scene Analysis (from Bystander Vision AI) */}
-            {caseRecord.sceneAnalysis && (
-                <Section title="🧠 Intelligent Scene Analysis">
-                    <MetricRow
-                        label="Severity"
-                        value={caseRecord.sceneAnalysis.injurySeverity}
-                        alert={caseRecord.sceneAnalysis.injurySeverity === 'CRITICAL'}
-                    />
-                    <MetricRow
-                        label="Victims"
-                        value={caseRecord.sceneAnalysis.victimCount.toString()}
-                    />
-                    <MetricRow
-                        label="Urgency"
-                        value={caseRecord.sceneAnalysis.urgencyLevel}
-                        alert={caseRecord.sceneAnalysis.urgencyLevel === 'IMMEDIATE'}
-                    />
-                    {caseRecord.sceneAnalysis.visibleHazards.length > 0 && (
-                        <div className={styles.tags} style={{ marginTop: '0.5rem' }}>
-                            {caseRecord.sceneAnalysis.visibleHazards.map((h) => (
-                                <span key={h} className="badge badge-yellow">⚠️ {h}</span>
-                            ))}
-                        </div>
-                    )}
-                </Section>
-            )}
-
-            {/* Crash Metrics */}
-            <Section title="Crash Metrics">
-                <MetricRow label="G-Force" value={`${metrics.gForce.toFixed(1)}g`} alert={metrics.gForce > 5} />
-                <MetricRow label="Speed Before" value={`${metrics.speedBefore} km/h`} />
-                <MetricRow label="Speed After" value={`${metrics.speedAfter} km/h`} />
-                <MetricRow label="ML Confidence" value={`${(metrics.mlConfidence * 100).toFixed(0)}%`} />
-                <MetricRow label="Crash Type" value={metrics.crashType} />
-                <MetricRow label="Rollover" value={metrics.rolloverDetected ? 'YES ⚠️' : 'No'} alert={metrics.rolloverDetected} />
-            </Section>
-
-            {/* Medical Info — only rendered when data exists */}
-            {mp.allergies.length > 0 && (
-                <Section title="⚠️ Allergies">
-                    <div className={styles.tags}>
-                        {mp.allergies.map((a) => (
-                            <span key={a} className="badge badge-red">{a}</span>
-                        ))}
-                    </div>
-                </Section>
-            )}
-
-            {mp.medications.length > 0 && (
-                <Section title="Medications">
-                    <div className={styles.tags}>
-                        {mp.medications.map((m) => (
-                            <span key={m} className="badge badge-blue">{m}</span>
-                        ))}
-                    </div>
-                </Section>
-            )}
-
-            {mp.conditions.length > 0 && (
-                <Section title="Medical Conditions">
-                    <div className={styles.tags}>
-                        {mp.conditions.map((c) => (
-                            <span key={c} className="badge badge-yellow">{c}</span>
-                        ))}
-                    </div>
-                </Section>
-            )}
-
-            {/* Emergency Contacts — guarded: empty array means no Section rendered */}
-            {mp.emergencyContacts.length > 0 && (
-                <Section title="Emergency Contacts">
-                    {mp.emergencyContacts.map((contact) => (
-                        <div key={contact} className={styles.contact}>
-                            <span>📞</span>
-                            <a href={`tel:${contact}`} className={styles.contactLink}>
-                                {contact}
-                            </a>
-                        </div>
-                    ))}
-                </Section>
-            )}
-
-            {/* Case Timeline */}
-            <CaseTimeline caseRecord={caseRecord} />
-
-            {/* Case Info */}
-            <Section title="Case Info">
-                <MetricRow label="Status" value={status} />
-                <MetricRow
-                    label="Created"
-                    value={new Date(createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                    })}
-                />
-                {caseRecord.responderId && (
-                    <MetricRow label="Responder" value={caseRecord.responderId} />
-                )}
-            </Section>
-
-            {/* Live Evidence Stream */}
-            <Section title="🔴 Live Evidence Stream">
-                <BroadcastPlayer accidentId={accidentId} />
-            </Section>
-        </div>
-    );
-}
-
-// ── BroadcastPlayer ──────────────────────────────────────────────
-function BroadcastPlayer({ accidentId }: { accidentId: string }) {
-    const [chunk, setChunk] = useState(0);
-    const [token, setToken] = useState<string | null>(null);
-    const [hasError, setHasError] = useState(false);
-
-    // Retrieve auth token — null if not available (never uses a fake fallback)
-    useEffect(() => {
-        try {
-            setToken(localStorage.getItem('rescuedge_token'));
-        } catch {
-            setToken(null);
-        }
-    }, []);
-
-    // Reset error state when chunk rotates (new segment might be valid)
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setChunk((c) => (c + 1) % 5);
-            setHasError(false);
-        }, 12_000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Use env var — never hardcode localhost
-    const baseUrl = process.env.NEXT_PUBLIC_DETECTION_API_URL ?? '';
-    const videoUrl = token && baseUrl
-        ? `${baseUrl}/api/broadcast/${encodeURIComponent(accidentId)}/stream/${chunk}?token=${encodeURIComponent(token)}`
-        : null;
-
-    // No auth token or service URL not configured
-    if (!videoUrl) {
-        return (
-            <div className={styles.streamOffline}>
-                <span>📡</span>
-                <p>Evidence stream unavailable — service not configured</p>
-            </div>
-        );
-    }
-
-    return (
-        <div className={styles.streamContainer}>
-            {hasError ? (
-                // Visible fallback card instead of invisible collapsed element
-                <div className={styles.streamOffline}>
-                    <span>📡</span>
-                    <p>Awaiting stream for chunk {chunk}…</p>
+            {/* 3. Crash Metrics */}
+            <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                    <span className="material-icons-round" style={{ fontSize: '14px' }}>insights</span>
+                    <span>Telemetry Metrics</span>
                 </div>
-            ) : (
-                <video
-                    key={videoUrl}
-                    autoPlay
-                    muted
-                    controls
-                    className={styles.videoPlayer}
-                    onError={() => setHasError(true)}
-                >
-                    <source src={videoUrl} type="video/mp4" />
-                    Your browser does not support the video element.
-                </video>
-            )}
-            <div className={styles.streamOverlay}>
-                <span className={styles.pulseDot} />
-                LIVE · CHUNK {chunk}
+                <div className={styles.metrics}>
+                    <div className={styles.metric}>
+                        <span className={styles.metricValue}>{c.gForce.toFixed(1)}g</span>
+                        <span className={styles.metricLabel}>Impact</span>
+                    </div>
+                    <div className={styles.metric}>
+                        <span className={styles.metricValue}>{c.speedBefore}</span>
+                        <span className={styles.metricLabel}>km/h Pre</span>
+                    </div>
+                    <div className={styles.metric}>
+                        <span className={styles.metricValue}>{(c.mlConfidence * 100).toFixed(0)}%</span>
+                        <span className={styles.metricLabel}>ML Conf</span>
+                    </div>
+                </div>
+                <div className={styles.item}>
+                    <span className={styles.label}>Detection Logic</span>
+                    <span className={styles.value}>{c.crashType}{c.rolloverDetected ? ' (Rollover)' : ''}</span>
+                </div>
             </div>
-        </div>
-    );
-}
 
-// ── Sub-components ───────────────────────────────────────────────
+            {/* 4. Scene Analysis (AI) */}
+            {s && (
+                <div className={styles.sceneAnalysis}>
+                    <div className={styles.sceneTitle}>
+                        <span className="material-icons-round" style={{ fontSize: '18px' }}>auto_awesome</span>
+                        <span>Gemini Vision Triage</span>
+                        <div className={`${styles.urgency} ${styles[URGENCY_CLASS[s.urgencyLevel] ?? 'urgencyNormal']}`}>
+                            {s.urgencyLevel}
+                        </div>
+                    </div>
+                    <p className={styles.sceneText}>
+                        AI suggests: {s.suggestedActions.join('. ')}
+                    </p>
+                    <div className={styles.item}>
+                        <span className={styles.label}>Injury Severity</span>
+                        <span className={styles.value} style={{ color: 'var(--color-sos-red)' }}>{s.injurySeverity}</span>
+                    </div>
+                    <div className={styles.item}>
+                        <span className={styles.label}>Visible Hazards</span>
+                        <div className={styles.list}>
+                            {s.visibleHazards.map(h => <span key={h} className={styles.chip}>{h}</span>)}
+                        </div>
+                    </div>
+                </div>
+            )}
 
-function VitalCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-    return (
-        <div className={`${styles.vitalCard} ${highlight ? styles.vitalHighlight : ''}`}>
-            <div className={styles.vitalValue}>{value}</div>
-            <div className={styles.vitalLabel}>{label}</div>
-        </div>
-    );
-}
+            {/* 4.5. Victim Accident Photo */}
+            <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                    <span className="material-icons-round" style={{ fontSize: '14px' }}>photo_camera</span>
+                    <span>Victim Accident Photo</span>
+                </div>
+                <div className={styles.photoContainer} style={{ 
+                    width: '100%', 
+                    borderRadius: '8px', 
+                    overflow: 'hidden',
+                    backgroundColor: '#f5f5f5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '300px'
+                }}>
+                    <img 
+                        src="/images/accident-scene-3.jpg" 
+                        alt="Victim accident scene from mobile app"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                    />
+                </div>
+            </div>
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-        <div className={styles.section}>
-            <div className={styles.sectionTitle}>{title}</div>
-            <div className={styles.sectionContent}>{children}</div>
-        </div>
-    );
-}
-
-function MetricRow({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
-    return (
-        <div className={styles.metricRow}>
-            <span className={styles.metricLabel}>{label}</span>
-            <span className={`${styles.metricValue} ${alert ? styles.metricAlert : ''}`}>
-                {value}
-            </span>
+            {/* 5. Command Actions */}
+            <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                    <span className="material-icons-round" style={{ fontSize: '14px' }}>visibility</span>
+                    <span>Scene Hazards & Victims</span>
+                </div>
+                <div className={styles.statusActions}>
+                    <div className={styles.btnGroup}>
+                        {caseRecord.status === 'DETECTED' && (
+                            <button
+                                className={`${styles.updateBtn} btn btn-sos`}
+                                onClick={() => handleStatus('DISPATCHED')}
+                                disabled={updating}
+                            >
+                                {updating ? '...' : 'Dispatch Help'}
+                            </button>
+                        )}
+                        {caseRecord.status === 'DISPATCHED' && (
+                            <button
+                                className={`${styles.updateBtn} btn btn-primary`}
+                                onClick={() => handleStatus('EN_ROUTE')}
+                                disabled={updating}
+                            >
+                                {updating ? '...' : 'Ambulance En-Route'}
+                            </button>
+                        )}
+                        {caseRecord.status === 'EN_ROUTE' && (
+                            <button
+                                className={`${styles.updateBtn} btn btn-primary`}
+                                onClick={() => handleStatus('ARRIVED')}
+                                disabled={updating}
+                            >
+                                {updating ? '...' : 'Confirm Arrival'}
+                            </button>
+                        )}
+                        {caseRecord.status === 'ARRIVED' && (
+                            <button
+                                className={`${styles.updateBtn} btn btn-primary`}
+                                onClick={() => handleStatus('RESOLVED')}
+                                disabled={updating}
+                            >
+                                {updating ? '...' : 'Resolve Case'}
+                            </button>
+                        )}
+                        {caseRecord.status === 'RESOLVED' && (
+                            <div className={styles.resolvedBanner}>
+                                <span className="material-icons-round">verified</span>
+                                Case Successfully Resolved
+                            </div>
+                        )}
+                        {caseRecord.status !== 'RESOLVED' && caseRecord.status !== 'CANCELLED' && (
+                            <button
+                                className={`${styles.updateBtn} btn btn-outlined`}
+                                onClick={() => handleStatus('CANCELLED')}
+                                disabled={updating}
+                            >
+                                Cancel Case
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

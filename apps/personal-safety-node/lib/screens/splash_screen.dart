@@ -140,9 +140,8 @@ class _SplashScreenState extends State<SplashScreen>
 
                     const SizedBox(height: 28),
 
-                    // Brand name
                     Text(
-                      'RescuEdge',
+                      'RapidRescue',
                       style: GoogleFonts.inter(
                         fontSize: 34,
                         fontWeight: FontWeight.w900,

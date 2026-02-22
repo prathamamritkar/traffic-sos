@@ -3,12 +3,12 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-    background: var(--bg-primary);
+    background: var(--md-sys-color-background);
 }
 
 .body {
     display: grid;
-    grid-template-columns: 20rem 1fr 18.75rem;
+    grid-template-columns: 320px 1fr 340px;
     flex: 1;
     overflow: hidden;
     gap: 0;
@@ -17,9 +17,9 @@
 .sidebar {
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
     overflow: hidden;
-    background: var(--bg-secondary);
+    background: var(--md-sys-color-surface);
 }
 
 .main {
@@ -31,19 +31,20 @@
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
-    font-size: 14px;
-    background: var(--bg-primary);
+    color: var(--md-sys-color-on-surface-variant);
+    font: 500 var(--text-body)/1 var(--font-sans);
+    background: var(--md-sys-color-background);
 }
 
 .details {
     display: flex;
     flex-direction: column;
-    border-left: 1px solid var(--border);
+    border-left: 1px solid var(--md-sys-color-outline-variant);
     overflow-y: auto;
-    background: var(--bg-secondary);
+    background: var(--md-sys-color-surface);
     gap: 0;
 }
 
@@ -53,16 +54,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
     padding: 32px;
-    color: var(--text-muted);
-    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
     text-align: center;
 }
 
 .noSelectionIcon {
-    font-size: 40px;
-    opacity: 0.5;
+    font-size: 48px;
+    color: var(--md-sys-color-outline-variant);
 }
 
 @media (max-width: 1200px) {

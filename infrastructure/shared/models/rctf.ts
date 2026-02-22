@@ -1,5 +1,5 @@
 // ============================================================
-// RescuEdge RCTF (RescuEdge Common Transfer Format) JSON Schema
+// RapidRescue RCTF (RapidRescue Common Transfer Format) JSON Schema
 // Enforced at every data boundary: REST, WebSocket, MQTT, Events
 // ============================================================
 

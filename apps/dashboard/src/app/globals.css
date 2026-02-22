@@ -1,5 +1,5 @@
 /* ============================================================
-   RescuEdge Dashboard — Material Design 3 Token System
+   RapidRescue Dashboard — Material Design 3 Token System
    Psychology-Calibrated Color System
    ──────────────────────────────────────────────────────────
    Color philosophy (mirrors Flutter app_theme.dart):
@@ -25,100 +25,78 @@
   padding: 0;
 }
 
-/* ── MD3 Color Tokens ─────────────────────────────────────── */
+/* ── MD3 Adaptive Color System ────────────────────────────── */
+
 :root {
-  /* ── Surface hierarchy (warm-neutral, not cold blue-black) ─
-     The slight warm undertone signals approachability and trust
-     vs. cold blue-black which reads as sterile / clinical.       */
-  --md-sys-color-background: #0A0A0F;
-  --md-sys-color-surface: #0F1117;
-  --md-sys-color-surface-container-lowest: #0A0A0F;
-  --md-sys-color-surface-container-low: #0F1117;
-  --md-sys-color-surface-container: #16191F;
-  --md-sys-color-surface-container-high: #1E222B;
-  --md-sys-color-surface-container-highest: #272C37;
+  /* ── Surface hierarchy (Material 3 Light) ───────────────── */
+  --md-sys-color-background: #FDFCFF;
+  --md-sys-color-surface: #FDFCFF;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F7F2FA;
+  --md-sys-color-surface-container: #F3EDF7;
+  --md-sys-color-surface-container-high: #ECE6F0;
+  --md-sys-color-surface-container-highest: #E6E1E5;
 
-  /* ── Brand red — calm-state (crimson, not fire-red) ─────────
-     D32F2F reads as "authority and urgency" without triggering
-     the startle reflex. Fire-red (#FF1744) is reserved for
-     active emergency indicators to prevent alarm fatigue.       */
-  --color-brand-red: #D32F2F;
-  --color-sos-red: #FF1744;
-  /* ACTIVE EMERGENCY ONLY */
-  --color-crash-red: #E53935;
-  /* crash countdown state */
-  --color-red-container: rgba(211, 47, 47, 0.10);
-  --color-red-on-container: #F48FB1;
+  /* ── Brand colors (Material 3 Light) ────────────────────── */
+  --color-brand-red: #B3261E;
+  --color-sos-red: #D32F2F;
+  --color-crash-red: #B3261E;
+  --color-red-container: #F9DEDC;
+  --color-red-on-container: #410E0B;
 
-  /* MD3 aliases */
   --md-sys-color-primary: var(--color-brand-red);
   --md-sys-color-on-primary: #FFFFFF;
   --md-sys-color-primary-container: var(--color-red-container);
   --md-sys-color-on-primary-container: var(--color-red-on-container);
 
-  /* ── Safe green (desaturated) — passive monitoring states ───
-     Neon #00C853 triggers urgency via high retinal saturation.
-     For "system is monitoring / you are safe" states, a deeper,
-     calmer green prevents constant subliminal stress arousal.    */
-  --color-safe-green: #2E7D52;
-  --color-arrived-green: #00C853;
-  /* help dispatched/arrived confirmation */
-  --color-green-container: rgba(46, 125, 82, 0.10);
-  --color-green-on-container: #81C784;
+  --color-safe-green: #146C2E;
+  --color-arrived-green: #117233;
+  --color-green-container: #C4EED0;
+  --color-green-on-container: #072711;
 
   --md-sys-color-tertiary: var(--color-safe-green);
   --md-sys-color-on-tertiary: #FFFFFF;
   --md-sys-color-tertiary-container: var(--color-green-container);
   --md-sys-color-on-tertiary-container: var(--color-green-on-container);
 
-  /* ── AI blue — intelligence / information / analysis ──────── */
-  --color-ai-blue: #1976D2;
+  --color-ai-blue: #0061A4;
   --color-blue-bright: #1E88E5;
-  --color-blue-container: rgba(25, 118, 210, 0.10);
-  --color-blue-on-container: #90CAF9;
+  --color-blue-container: #D1E4FF;
+  --color-blue-on-container: #001D36;
 
   --md-sys-color-secondary: var(--color-ai-blue);
   --md-sys-color-on-secondary: #FFFFFF;
   --md-sys-color-secondary-container: var(--color-blue-container);
   --md-sys-color-on-secondary-container: var(--color-blue-on-container);
 
-  /* ── Warning amber — reserved for genuine warnings ONLY ─────
-     F57C00 has enough saturation to demand attention without the
-     alarm cortisol spike of red. Used only for real warnings.
-     B07D24 (infoAmber) = much softer — for informational tags.  */
-  --color-warn-amber: #F57C00;
-  --color-info-amber: #B07D24;
-  --color-amber-container: rgba(245, 124, 0, 0.09);
+  --color-warn-amber: #934B00;
+  --color-info-amber: #805B00;
+  --color-amber-container: #FFDCC0;
 
-  /* ── Error ──────────────────────────────────────────────────  */
-  --md-sys-color-error: #E53935;
+  --md-sys-color-error: #B3261E;
   --md-sys-color-on-error: #FFFFFF;
-  --md-sys-color-error-container: rgba(229, 57, 53, 0.10);
+  --md-sys-color-error-container: #F9DEDC;
 
-  /* ── Text — WCAG 2.1 AA verified on #16191F surface ─────────
-     EEF2F7 on #16191F: ≈14.0:1 ✓
-     8E9BAE on #16191F: ≈ 4.7:1 ✓ (AA)
-     637483 on #16191F: ≈ 3.6:1  (AA Large / decorative)
-     424B5C on #16191F: ≈ 2.3:1  (decorative only — not for content)  */
-  --md-sys-color-on-surface: #EEF2F7;
-  --md-sys-color-on-surface-variant: #8E9BAE;
-  --md-sys-color-text-muted: #637483;
-  /* raised from 4B5E72 */
-  --md-sys-color-text-disabled: #424B5C;
-  /* decorative only */
-  --md-sys-color-outline: rgba(255, 255, 255, 0.07);
-  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.04);
+  /* ── Text system (Light Mode) ───────────────────────────── */
+  --md-sys-color-on-surface: #1A1C1E;
+  --md-sys-color-on-surface-variant: #44474E;
+  --md-sys-color-text-muted: #5E626B;
+  --md-sys-color-text-disabled: #A8AAAD;
 
-  /* ── Semantic glow shadows ──────────────────────────────────  */
-  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.45);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
-  --glow-brand-red: 0 0 20px rgba(211, 47, 47, 0.28);
-  --glow-sos-red: 0 0 28px rgba(255, 23, 68, 0.40);
-  --glow-safe-green: 0 0 18px rgba(46, 125, 82, 0.25);
-  --glow-ai-blue: 0 0 18px rgba(25, 118, 210, 0.28);
+  --md-sys-color-outline: #74777F;
+  --md-sys-color-outline-variant: #C4C7CF;
 
-  /* ── Border radii — MD3 ───────────────────────────────────── */
+  /* ── Shadows (Light Mode) ───────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  --glow-brand-red: 0 0 15px rgba(179, 38, 30, 0.12);
+  --glow-sos-red: 0 0 20px rgba(211, 47, 47, 0.18);
+  --glow-safe-green: 0 0 15px rgba(20, 108, 46, 0.10);
+  --glow-ai-blue: 0 0 15px rgba(0, 97, 164, 0.12);
+
+  /* ── Shared Constants ───────────────────────────────────── */
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -126,7 +104,6 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* ── Typography ─────────────────────────────────────────────  */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
@@ -137,13 +114,116 @@
   --text-label: 0.8125rem;
   --text-caption: 0.6875rem;
 
-  /* ── Motion / Easing ────────────────────────────────────────  */
   --easing-standard: cubic-bezier(0.2, 0, 0, 1);
   --easing-decel: cubic-bezier(0, 0, 0.2, 1);
   --easing-accel: cubic-bezier(0.3, 0, 1, 1);
   --duration-short: 150ms;
   --duration-medium: 250ms;
   --duration-long: 400ms;
+
+  /* ── Semantic Aliases ──────────────────────────────────── */
+  --bg-primary: var(--md-sys-color-background);
+  --bg-secondary: var(--md-sys-color-surface-container-low);
+  --bg-card: var(--md-sys-color-surface-container);
+  --border: var(--md-sys-color-outline-variant);
+  --text-primary: var(--md-sys-color-on-surface);
+  --text-secondary: var(--md-sys-color-on-surface-variant);
+  --text-muted: var(--md-sys-color-text-muted);
+  --red: var(--color-brand-red);
+  --green: var(--color-safe-green);
+  --blue: var(--color-ai-blue);
+  --yellow: var(--color-warn-amber);
+
+  --nav-bg: rgba(253, 252, 255, 0.88);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --map-filter: none;
+
+  --indicator-GREEN: var(--color-arrived-green);
+  --indicator-RED: var(--color-sos-red);
+  --indicator-YELLOW: var(--color-warn-amber);
+}
+
+[data-theme='dark'] {
+  /* ── Surface hierarchy (Material 3 Dark) ────────────────── */
+  --md-sys-color-background: #0A0A0F;
+  --md-sys-color-surface: #0F1117;
+  --md-sys-color-surface-container-lowest: #08080C;
+  --md-sys-color-surface-container-low: #14161C;
+  --md-sys-color-surface-container: #1C1E26;
+  --md-sys-color-surface-container-high: #242730;
+  --md-sys-color-surface-container-highest: #2D303A;
+
+  /* ── Brand colors (Material 3 Dark) ─────────────────────── */
+  --color-brand-red: #FFB4AB;
+  --color-sos-red: #FF1744;
+  --color-crash-red: #FF5449;
+  --color-red-container: #93000A;
+  --color-red-on-container: #FFDAD6;
+
+  --md-sys-color-primary: var(--color-brand-red);
+  --md-sys-color-on-primary: #690005;
+  --md-sys-color-primary-container: var(--color-red-container);
+  --md-sys-color-on-primary-container: var(--color-red-on-container);
+
+  --color-safe-green: #2E7D52;
+  --color-arrived-green: #00E676;
+  --color-green-container: #005322;
+  --color-green-on-container: #C4EED0;
+
+  --md-sys-color-tertiary: var(--color-safe-green);
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: var(--color-green-container);
+  --md-sys-color-on-tertiary-container: var(--color-green-on-container);
+
+  --color-ai-blue: #A1C9FF;
+  --color-blue-bright: #448AFF;
+  --color-blue-container: #00497E;
+  --color-blue-on-container: #D1E4FF;
+
+  --md-sys-color-secondary: var(--color-ai-blue);
+  --md-sys-color-on-secondary: #003258;
+  --md-sys-color-secondary-container: var(--color-blue-container);
+  --md-sys-color-on-secondary-container: var(--color-blue-on-container);
+
+  --color-warn-amber: #FFB74D;
+  --color-info-amber: #FFD54F;
+  --color-amber-container: #7B4E00;
+
+  --md-sys-color-error: #FFB4AB;
+  --md-sys-color-on-error: #690005;
+  --md-sys-color-error-container: #93000A;
+
+  /* ── Text system (Dark Mode) ────────────────────────────── */
+  --md-sys-color-on-surface: #E3E2E6;
+  --md-sys-color-on-surface-variant: #C4C6D0;
+  --md-sys-color-text-muted: #8E9199;
+  --md-sys-color-text-disabled: #44474E;
+
+  --md-sys-color-outline: #8E9199;
+  --md-sys-color-outline-variant: #44474E;
+
+  /* ── Shadows (Dark Mode) ────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --glow-brand-red: 0 0 15px rgba(255, 180, 171, 0.15);
+  --glow-sos-red: 0 0 25px rgba(255, 23, 68, 0.3);
+  --glow-safe-green: 0 0 15px rgba(46, 125, 82, 0.2);
+  --glow-ai-blue: 0 0 15px rgba(161, 201, 255, 0.15);
+
+  --red: var(--color-brand-red);
+  --green: var(--color-safe-green);
+  --blue: var(--color-ai-blue);
+  --yellow: var(--color-warn-amber);
+
+  --nav-bg: rgba(10, 10, 15, 0.88);
+  --glass-bg: rgba(15, 17, 23, 0.88);
+  --map-filter: brightness(0.52) saturate(0.65) hue-rotate(200deg);
+
+  --indicator-GREEN: var(--color-arrived-green);
+  --indicator-RED: var(--color-sos-red);
+  --indicator-YELLOW: var(--color-warn-amber);
 }
 
 /* ── Base ─────────────────────────────────────────────────── */
@@ -190,42 +270,138 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* ── Typography classes ───────────────────────────────────── */
+/* ── Typography Scale (Material 3) ─────────────────────────── */
 .md-display-large {
-  font-size: var(--text-display);
-  font-weight: 800;
+  font: 400 var(--text-display)/1.1 var(--font-sans);
   letter-spacing: -0.5px;
-  line-height: 1.1;
 }
 
-.md-headline-large {
-  font-size: var(--text-headline);
-  font-weight: 700;
-  letter-spacing: -0.2px;
+.md-headline-medium {
+  font: 500 var(--text-headline)/1.2 var(--font-sans);
 }
 
-.md-title-medium {
-  font-size: var(--text-title);
-  font-weight: 700;
+.md-title-large {
+  font: 500 var(--text-title)/1.3 var(--font-sans);
+}
+
+.md-title-small {
+  font: 700 0.875rem/1.4 var(--font-sans);
+  letter-spacing: 0.2px;
 }
 
 .md-body-medium {
-  font-size: var(--text-body);
-  font-weight: 400;
-  line-height: 1.6;
+  font: 400 var(--text-body)/1.5 var(--font-sans);
 }
 
 .md-label-large {
-  font-size: var(--text-label);
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font: 600 var(--text-label)/1.4 var(--font-sans);
+  letter-spacing: 0.1px;
+  text-transform: uppercase;
 }
 
-.md-caption {
-  font-size: var(--text-caption);
+.md-label-small {
+  font: 500 var(--text-caption)/1.4 var(--font-sans);
+  letter-spacing: 0.5px;
+}
+
+/* ── MD3 Badge System ────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all var(--duration-short) var(--easing-standard);
+}
+
+.badge-red {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border: 1px solid rgba(255, 180, 171, 0.2);
+}
+
+.badge-green {
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.badge-blue {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.badge-yellow {
+  background: var(--color-amber-container);
+  color: var(--color-warn-amber);
+}
+
+.badge-gray {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Active emergency — maximum urgency badge */
+.badge-sos {
+  background: color-mix(in srgb, var(--color-sos-red), transparent 85%);
+  color: var(--color-sos-red);
+  border: 1px solid color-mix(in srgb, var(--color-sos-red), transparent 60%);
+  animation: pulse-sos 1.4s ease-in-out infinite;
+}
+
+/* ── UI Shell Utilities ───────────────────────────────────── */
+.surface-container {
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.elevated-card {
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-medium) var(--easing-standard);
+}
+
+.elevated-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Skeleton loader ──────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+      var(--md-sys-color-surface-container) 25%,
+      var(--md-sys-color-surface-container-high) 50%,
+      var(--md-sys-color-surface-container) 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Leaflet map overrides ────────────────────────────────── */
+.leaflet-container {
+  background: var(--md-sys-color-background) !important;
+}
+
+.leaflet-tile {
+  /* No dark filter for light mode */
+  filter: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--md-sys-color-surface-container-lowest) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--md-sys-color-surface-container-lowest) !important;
 }
 
 /* ── Surface cards ────────────────────────────────────────── */
@@ -242,56 +418,29 @@ body {
 }
 
 .md-glass {
-  background: rgba(15, 17, 23, 0.88);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(1.2);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* ── Badges ───────────────────────────────────────────────── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 9px;
-  border-radius: var(--radius-full);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-/* Semantic badge colors */
-.badge-red {
-  background: var(--color-red-container);
-  color: var(--color-red-on-container);
-  border: 1px solid rgba(211, 47, 47, 0.25);
-}
-
-.badge-green {
-  background: var(--color-green-container);
-  color: var(--color-green-on-container);
-  border: 1px solid rgba(46, 125, 82, 0.25);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .badge-blue {
-  background: var(--color-blue-container);
-  color: var(--color-blue-on-container);
-  border: 1px solid rgba(25, 118, 210, 0.25);
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-secondary), transparent 80%);
 }
 
 .badge-amber {
-  background: var(--color-amber-container);
-  color: var(--color-warn-amber);
-  border: 1px solid rgba(245, 124, 0, 0.25);
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-error), transparent 80%);
 }
 
 /* Active emergency — maximum urgency badge */
 .badge-sos {
-  background: rgba(255, 23, 68, 0.15);
+  background: color-mix(in srgb, var(--color-sos-red), transparent 85%);
   color: var(--color-sos-red);
-  border: 1px solid rgba(255, 23, 68, 0.40);
+  border: 1px solid color-mix(in srgb, var(--color-sos-red), transparent 60%);
   animation: pulse-sos 1.4s ease-in-out infinite;
 }
 
@@ -343,17 +492,17 @@ body {
 
 .btn-sos:hover {
   filter: brightness(1.08);
-  box-shadow: 0 0 36px rgba(255, 23, 68, 0.55);
+  box-shadow: 0 0 36px color-mix(in srgb, var(--color-sos-red), transparent 45%);
 }
 
 .btn-tonal {
-  background: var(--color-red-container);
-  color: var(--color-red-on-container);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
   padding: 10px 20px;
 }
 
 .btn-tonal:hover {
-  background: rgba(211, 47, 47, 0.18);
+  background: color-mix(in srgb, var(--md-sys-color-primary), transparent 82%);
 }
 
 .btn-outlined {
@@ -376,7 +525,7 @@ body {
 }
 
 .btn-text:hover {
-  background: var(--color-red-container);
+  background: var(--md-sys-color-primary-container);
 }
 
 .btn-icon {
@@ -509,11 +658,11 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-sos-red), transparent 30%);
   }
 
   50% {
-    box-shadow: 0 0 0 6px rgba(255, 23, 68, 0);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-sos-red), transparent 100%);
   }
 }
 
@@ -521,11 +670,11 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.6);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary), transparent 40%);
   }
 
   50% {
-    box-shadow: 0 0 0 5px rgba(211, 47, 47, 0);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--md-sys-color-primary), transparent 100%);
   }
 }
 
@@ -534,11 +683,11 @@ body {
   /* safeGreen pulse — lower amplitude than SOS for cognitive calmness */
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(46, 125, 82, 0.6);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-tertiary), transparent 40%);
   }
 
   50% {
-    box-shadow: 0 0 0 4px rgba(46, 125, 82, 0);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-tertiary), transparent 100%);
   }
 }
 
@@ -607,7 +756,7 @@ body {
 }
 
 .leaflet-tile {
-  filter: brightness(0.52) saturate(0.65) hue-rotate(200deg);
+  filter: var(--map-filter);
 }
 
 .leaflet-popup-content-wrapper {

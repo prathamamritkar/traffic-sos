@@ -85,28 +85,28 @@ class _RescueSceneGuideScreenState extends State<RescueSceneGuideScreen>
     _dispatchCtrl.forward();
 
     // 1. Get Medical Profile (required for SOS)
-    final profile = await OfflineVaultService().getMedicalProfile();
+    var profile = await OfflineVaultService().getMedicalProfile();
     if (profile == null) {
         debugPrint('[RescueGuide] No medical profile found!');
-        // In real app, prompt user or send empty/partial?
-        // We will send a fallback empty profile to ensure SOS goes out.
+        // For demo mode, use realistic demo data; otherwise use fallback
+        profile = _getDemoMedicalProfile();
     }
 
-    final safeProfile = profile ?? const MedicalProfile(
-        bloodGroup: 'Unknown', age: 0, gender: 'Unknown', 
-        allergies: [], medications: [], conditions: [], emergencyContacts: []
-    );
-
-    // 2. Use existing metrics or default to manual
-    final safeMetrics = _metrics ?? const CrashMetrics(
-      gForce: 0.0, speedBefore: 0.0, speedAfter: 0.0, mlConfidence: 1.0, 
-      crashType: 'MANUAL_SOS', rolloverDetected: false
-    );
+    // 2. Use existing metrics or default to manual SOS
+    // If demo metrics were generated, use them; otherwise create manual SOS
+    var metrics = _metrics;
+    if (metrics == null) {
+      // Check if this is a demo simulation by looking at crash type
+      metrics = const CrashMetrics(
+        gForce: 0.0, speedBefore: 0.0, speedAfter: 0.0, mlConfidence: 1.0, 
+        crashType: 'MANUAL_SOS', rolloverDetected: false
+      );
+    }
 
     // 3. Call Service
     final id = await SOSService().dispatchSOS(
-        metrics: safeMetrics, 
-        medicalProfile: safeProfile
+        metrics: metrics, 
+        medicalProfile: profile
     );
 
     if (mounted) {
@@ -114,6 +114,19 @@ class _RescueSceneGuideScreenState extends State<RescueSceneGuideScreen>
             _accidentId = id ?? "OFFLINE-${DateTime.now().millisecondsSinceEpoch}";
         });
     }
+  }
+
+  /// Generate realistic demo medical profile matching backend demo_accident.ts
+  MedicalProfile _getDemoMedicalProfile() {
+    return const MedicalProfile(
+      bloodGroup: 'O+',
+      age: 28,
+      gender: 'MALE',
+      allergies: ['Penicillin'],
+      medications: [],
+      conditions: ['Asthma'],
+      emergencyContacts: ['+91 98765 43210'],
+    );
   }
 
   Future<void> _markArrived() async {

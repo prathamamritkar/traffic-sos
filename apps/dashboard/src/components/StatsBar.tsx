@@ -11,21 +11,25 @@ interface StatsBarProps {
 export function StatsBar({ total, active, resolved, responders }: StatsBarProps) {
     return (
         <div className={styles.bar}>
-            <Stat label="Total" value={total} color="blue" />
-            <Stat label="Active" value={active} color="red" pulse />
-            <Stat label="Resolved" value={resolved} color="green" />
-            <Stat label="Responders" value={responders} color="yellow" />
-        </div>
-    );
-}
-
-function Stat({ label, value, color, pulse }: { label: string; value: number; color: string; pulse?: boolean }) {
-    return (
-        <div className={styles.stat}>
-            <div className={`${styles.dot} ${styles[`dot_${color}`]} ${pulse ? styles.pulse : ''}`} />
-            <div>
-                <div className={styles.value}>{value}</div>
-                <div className={styles.label}>{label}</div>
+            <div className={styles.stat}>
+                <span className="material-icons-round" style={{ fontSize: 18, color: 'var(--text-muted)' }}>analytics</span>
+                <span className={`${styles.value} ${styles.total}`}>{total}</span>
+                <span className={styles.label}>Total</span>
+            </div>
+            <div className={styles.stat}>
+                <span className="material-icons-round" style={{ fontSize: 18, color: 'var(--indicator-RED)' }}>car_crash</span>
+                <span className={`${styles.value} ${styles.active}`}>{active}</span>
+                <span className={styles.label}>Active</span>
+            </div>
+            <div className={styles.stat}>
+                <span className="material-icons-round" style={{ fontSize: 18, color: 'var(--indicator-GREEN)' }}>task_alt</span>
+                <span className={`${styles.value} ${styles.resolved}`}>{resolved}</span>
+                <span className={styles.label}>Resolved</span>
+            </div>
+            <div className={styles.stat}>
+                <span className="material-icons-round" style={{ fontSize: 18, color: 'var(--indicator-BLUE)' }}>emergency</span>
+                <span className={`${styles.value} ${styles.responders}`}>{responders}</span>
+                <span className={styles.label}>Responders</span>
             </div>
         </div>
     );

@@ -96,7 +96,27 @@ class CrashDetectionService {
   }
 
   void simulateCrash() {
-    _handleCrashEvent(25.0); // Simulate high G-force
+    // Demo Mode: Realistic accident scenario matching backend demo_accident.ts
+    final demoMetrics = CrashMetrics(
+      gForce:            9.2,                      // High G-force (auto-confirm)
+      speedBefore:       45.0,                     // 45 km/h
+      speedAfter:        0.0,                      // Came to abrupt stop
+      mlConfidence:      0.98,                     // High ML confidence
+      crashType:         'CONFIRMED_CRASH',        // Definitive crash type
+      rolloverDetected:  true,                     // Rollover detected
+      impactDirection:   'FRONT',                  // Front impact
+    );
+
+    _logger.logEvent('DEMO_CRASH_SIMULATED', demoMetrics.toJson());
+    
+    onCrashDetected?.call(CrashDetectionResult(
+      isCrash: true,
+      metrics: demoMetrics,
+      reason: 'Demo Scenario: Multi-vehicle collision with rollover',
+    ));
+    
+    // Auto-stop monitoring to prevent duplicate alerts
+    stopMonitoring();
   }
   
   void dispose() {
